@@ -32,6 +32,6 @@ Modul dibuat sesederhana mungkin di tahap awal, fokus pada alur pinjam dan barte
 |----|-------|---------|
 | 1 | Modul Barang (Item Listing) | Della |
 | 2 | Modul Transaksi Pinjam & Barter | Bina |
-| 3 | Modul Pencarian, Filter & Lokasi | *(nama anggota 3)* |
+| 3 | Modul Pencarian, Filter & Lokasi | Celine |
 | 4 | Modul Profil | Khanyfah |
 | 5 | Chat | *(nama anggota 5)* |
