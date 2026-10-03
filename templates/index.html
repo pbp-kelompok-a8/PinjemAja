@@ -1,256 +1,158 @@
 {% extends 'base.html' %}
-{% block meta %} <title>PinjemAja - Pinjam Barang, Jangan Beli</title> {% endblock meta %}
+{% load static %}
+
+{% block meta %}
+<title>PinjemAja - Pinjam Barang, Jangan Beli</title>
+{# kartu barang memakai style dari modul item #}
+<link rel="stylesheet" href="{% static 'item/css/item.css' %}">
+{% endblock meta %}
 
 {% block content %}
-    <main>
-        <section class="hero" id="home">
-            <div class="container">
-                <div class="hero-content">
-                    <p class="hero-kicker">
-                        Platform Berbagi Barang Berbasis Komunitas
-                    </p>
-                    <h1>
-                        Butuh barang?
-                        <br>
-                        <span>PinjemAja.</span>
-                    </h1>
-                    <p class="hero-description">
-                        Temukan dan pinjam barang yang kamu butuhkan
-                        dari orang-orang di sekitarmu tanpa harus membeli
-                        barang yang hanya akan digunakan sesekali.
-                    </p>
-                </div>
+<main>
 
-                <!-- search, perlu url yak sm bikin form -->
-                <form class="search-form d-flex gap-2 mx-auto" action="" method="GET">
-                    <div class="search-input"> <span>🔎</span>
-                        <input type="text" name="input" placeholder="Cari barang yang kamu butuhkan..." >
-                    </div>
+    <!-- HERO -->
+    <section class="hero" id="home">
+        <div class="container">
+            <p class="hero-kicker">Platform berbagi barang berbasis komunitas</p>
 
-                    <button type="submit" class="btn btn-primary"> Cari Barang </button>
-                </form>
+            <h1>
+                Butuh barang sesekali?
+                <br>
+                <span>PinjemAja</span>
+            </h1>
+
+            <p class="hero-description">
+                Platform berbagi barang berbasis komunitas untuk mendukung
+                gaya hidup bebas limbah. Pinjam perlengkapan yang kamu butuhkan,
+                dan sewakan barang yang jarang kamu pakai.
+            </p>
+
+            <div class="hero-badges">
+                <span class="hero-badge">💰 Hemat Biaya</span>
+                <span class="hero-badge">♻️ Bebas Limbah</span>
+                <span class="hero-badge">🔒 Transaksi Aman</span>
             </div>
-        </section>
+        </div>
+    </section>
 
-        <!-- Item Preview -->
-        <section class="items-section" id="items">
-            <div class="container">
+    <!-- KATEGORI -->
+    <section class="category-section" id="categories">
+        <div class="container">
+            <h2 class="section-title">Kategori</h2>
 
-                <div class="section-heading">
-                    <div>
-                        <p class="section-kicker">Barang Pilihan</p>
-
-                        <h2>
-                            Temukan barang
-                            <br>
-                            yang kamu butuhkan.
-                        </h2>
-                    </div>
-
-                    <!-- ini ngelink ke url yg view all product -->
-                    <a href="#" class="view-all">
-                        Lihat semua →
-                    </a>
-                </div>
-
-                <div class="items-grid">
-
-                    <!-- Item Card -->
-                    <article class="item-card">
-
-                        <div class="item-image">
-                            <span class="item-badge">
-                                Tersedia
-                            </span>
-                        </div>
-
-                        <div class="item-content">
-
-                            <p class="item-category">
-                                Elektronik
-                            </p>
-
-                            <h3>
-                                Speaker Portable
-                            </h3>
-
-                            <p class="item-location">
-                                📍 Depok
-                            </p>
-
-                            <div class="item-footer">
-                                <strong>
-                                    Rp10.000 / hari
-                                </strong>
-
-                                <a href="#">
-                                    Detail
-                                </a>
-                            </div>
-
-                        </div>
-
-                    </article>
-
-
-                    <!-- Item Card -->
-                    <article class="item-card">
-
-                        <div class="item-image">
-                            <span class="item-badge">
-                                Tersedia
-                            </span>
-                        </div>
-
-                        <div class="item-content">
-
-                            <p class="item-category">
-                                Outdoor
-                            </p>
-
-                            <h3>
-                                Tenda Camping
-                            </h3>
-
-                            <p class="item-location">
-                                📍 Beji
-                            </p>
-
-                            <div class="item-footer">
-                                <strong>
-                                    Rp25.000 / hari
-                                </strong>
-
-                                <a href="#">
-                                    Detail
-                                </a>
-                            </div>
-
-                        </div>
-
-                    </article>
-
-
-                    <!-- Item Card -->
-                    <article class="item-card">
-
-                        <div class="item-image">
-                            <span class="item-badge">
-                                Tersedia
-                            </span>
-                        </div>
-
-                        <div class="item-content">
-
-                            <p class="item-category">
-                                Fashion
-                            </p>
-
-                            <h3>
-                                Jas Formal
-                            </h3>
-
-                            <p class="item-location">
-                                📍 Kukusan
-                            </p>
-
-                            <div class="item-footer">
-                                <strong>
-                                    Rp20.000 / hari
-                                </strong>
-
-                                <a href="#">
-                                    Detail
-                                </a>
-                            </div>
-
-                        </div>
-
-                    </article>
-
-                </div>
-
+            <div class="category-grid">
+                <a class="category-tile" href="{% url 'item:item_list' %}?category=camping">
+                    <span class="category-icon">⛺</span>Camping
+                </a>
+                <a class="category-tile" href="{% url 'item:item_list' %}?category=perkakas">
+                    <span class="category-icon">🔨</span>Perkakas
+                </a>
+                <a class="category-tile" href="{% url 'item:item_list' %}?category=fotografi">
+                    <span class="category-icon">📷</span>Fotografi
+                </a>
+                <a class="category-tile" href="{% url 'item:item_list' %}?category=fashion">
+                    <span class="category-icon">👔</span>Fashion
+                </a>
+                <a class="category-tile" href="{% url 'item:item_list' %}?category=buku">
+                    <span class="category-icon">📚</span>Buku
+                </a>
+                <a class="category-tile" href="{% url 'item:item_list' %}?category=olahraga">
+                    <span class="category-icon">⚽</span>Olahraga
+                </a>
+                <a class="category-tile" href="{% url 'item:item_list' %}?category=game">
+                    <span class="category-icon">🎮</span>Game
+                </a>
+                <a class="category-tile" href="{% url 'item:item_list' %}?category=travel">
+                    <span class="category-icon">🧳</span>Travel
+                </a>
+                <a class="category-tile" href="{% url 'item:item_list' %}?category=elektronik">
+                    <span class="category-icon">📺</span>Elektronik
+                </a>
+                <a class="category-tile" href="{% url 'item:item_list' %}?category=hobi">
+                    <span class="category-icon">🎸</span>Hobi
+                </a>
+                <a class="category-tile" href="{% url 'item:item_list' %}?category=otomotif">
+                    <span class="category-icon">🚗</span>Otomotif
+                </a>
+                <a class="category-tile" href="{% url 'item:item_list' %}?category=aksesoris">
+                    <span class="category-icon">⌚</span>Aksesoris
+                </a>
+                <a class="category-tile" href="{% url 'item:item_list' %}?category=perlengkapan">
+                    <span class="category-icon">🧹</span>Perlengkapan
+                </a>
             </div>
-        </section>
+        </div>
+    </section>
 
+    <!-- REKOMENDASI BARANG -->
+    <section class="recommend-section" id="items">
+        <div class="container">
+            <h2 class="section-title is-accent">Rekomendasi Barang</h2>
 
-        <!-- About Section -->
-        <section class="about-section" id="about">
-            <div class="container">
+            {% if recommended_items %}
+            <div class="recommend-grid">
+                {% for item in recommended_items %}
+                    {% include 'item/_item_card.html' with item=item show_actions=False %}
+                {% endfor %}
+            </div>
+            <p class="recommend-more">
+                <a href="{% url 'item:item_list' %}">Lihat semua barang →</a>
+            </p>
+            {% else %}
+            <p class="recommend-empty">Belum ada barang. Jadilah yang pertama menyewakan barangmu!</p>
+            {% endif %}
+        </div>
+    </section>
 
-                <p class="section-kicker">Tentang PinjemAja</p>
-
+    <!-- TENTANG -->
+    <section class="about-section" id="about">
+        <div class="container about-grid">
+            <div>
+                <p class="about-kicker">Tentang PinjemAja</p>
                 <h2>
                     Barang yang jarang dipakai
                     <br>
-                    bisa jadi berguna untuk orang lain.
+                    bisa jadi sangat berguna untuk orang lain.
                 </h2>
-
-                <p class="section-description">
-                    PinjemAja adalah platform berbasis komunitas yang
-                    memungkinkan pengguna untuk meminjam dan meminjamkan
-                    barang. Pengguna dapat menemukan barang berdasarkan
-                    kategori, lokasi, harga, ketersediaan, dan kondisi.
+                <p class="about-description">
+                    PinjemAja adalah platform sewa-menyewa peer-to-peer (P2P) yang
+                    menghubungkanmu dengan tetangga. Hemat uangmu, selamatkan bumi
+                    dari limbah konsumtif, dan bangun komunitas yang saling percaya.
                 </p>
-
             </div>
-        </section>
+            <div class="about-logo">{% include '_logo.html' %}</div>
+        </div>
+    </section>
 
-        <!-- How It Works -->
-        <section class="how-section" id="how-it-works">
-            <div class="container">
+    <!-- CARA KERJA -->
+    <section class="how-section" id="how-it-works">
+        <div class="container">
+            <h2 class="section-title is-left">Mulai Pinjam dalam 3 Langkah Mudah</h2>
 
-                <p class="section-kicker">Cara Kerja</p>
-
-                <div class="steps-grid">
-
-                    <div class="step-card">
-                        <span class="step-number">01</span>
-
-                        <h3>Cari</h3>
-
-                        <p>
-                            Temukan barang yang kamu butuhkan
-                            berdasarkan kategori, lokasi, harga,
-                            dan ketersediaannya.
-                        </p>
-                    </div>
-
-
-                    <div class="step-card">
-                        <span class="step-number">02</span>
-
-                        <h3>Pinjam</h3>
-
-                        <p>
-                            Ajukan peminjaman kepada pemilik barang
-                            dan tentukan periode peminjaman yang
-                            kamu butuhkan.
-                        </p>
-                    </div>
-
-
-                    <div class="step-card">
-                        <span class="step-number">03</span>
-
-                        <h3>Kembalikan</h3>
-
-                        <p>
-                            Gunakan barang dengan baik dan
-                            kembalikan sesuai kesepakatan.
-                        </p>
-                    </div>
-
+            <div class="steps-grid">
+                <div class="step-card">
+                    <span class="step-number">01</span>
+                    <h3>Temukan</h3>
+                    <p>Telusuri ribuan barang dari tetanggamu, mulai dari alat kemping sampai perkakas rumah.</p>
                 </div>
 
+                <div class="step-card">
+                    <span class="step-number">02</span>
+                    <h3>Pinjam</h3>
+                    <p>Ajukan permintaan sewa, bayar dengan aman lewat platform, dan janjian untuk ambil barangnya.</p>
+                </div>
+
+                <div class="step-card">
+                    <span class="step-number">03</span>
+                    <h3>Kembalikan</h3>
+                    <p>Gunakan barang dengan baik, kembalikan tepat waktu, dan jangan lupa kasih ulasan!</p>
+                </div>
             </div>
-        </section>
+        </div>
+    </section>
 
-    </main>
+</main>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
-
-</body>
-</html>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
 {% endblock content %}

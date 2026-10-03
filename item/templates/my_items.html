@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>Etalase Barang Saya - PinjemAja</title>
+<link rel="stylesheet" href="{% static 'item/css/item.css' %}">
+{% endblock meta %}
+
+{% block content %}
+<main class="pa-page">
+    <div class="container">
+        {% include 'item/_messages.html' %}
+
+        <div class="pa-heading">
+            <h1>Etalase Barang Saya</h1>
+            <a href="{% url 'item:item_create' %}" class="btn-pa-primary">+ Tambah Barang</a>
+        </div>
+
+        {% if items %}
+        <div class="catalog-grid">
+            {% for item in items %}
+                {% include 'item/_item_card.html' with item=item show_actions=True %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="pa-empty">
+            Kamu belum punya barang.
+            <a href="{% url 'item:item_create' %}">Tambah barang pertamamu</a>.
+        </p>
+        {% endif %}
+    </div>
+</main>
+{% endblock content %}

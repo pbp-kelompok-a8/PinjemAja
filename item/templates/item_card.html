@@ -1,0 +1,32 @@
+{% with cover=item.cover_image %}
+<article class ="calatog-class">
+    <a href="{% url 'item:item_detail' item.pk %}" class="catalog-link">
+        <div class="catalog-image">
+            {% if cover %}
+                <img src="{{ cover.image.url }}" alt="{{ item.name }}">
+            {% else %}
+                <span>Belum ada foto</span>
+            {% endif %}
+        </div>
+        <p class="catalog-categoty">{{ item.get_category_display }}</p>
+        <h3 class="catalog-name">{{ item.name }}</h3>
+        <p class="catalog-locaation">{{ item.location }}</p>
+        <p class="catalog-price">Rp{{ item.price|floatformat:"0g" }} / hari</p>
+    </a>
+
+    {% if item.status == 'tersedia' %}
+        <span class="status-pill available">Tersedia</span>
+    {% elif item.status == 'Terpinjam' %}
+        <span class="status-pill borrowed">Terpinjam</span>
+    {% else %}
+        <span class="status-pill unavailable">Tidak Tersedia</span>
+    {% endif %}
+
+    {% if show_actions %}
+    <div class="catalog-actions">
+        <a href="{% url 'item:item_update' item.pk %}" class="btn-pa-outline">Edit</a>
+        <a href="{% url 'item:item_delete' item.pk %}" class="btn-pa-danger">Hapus</a>
+    </div>
+    {% endif %}
+</article>
+{% endwith %}

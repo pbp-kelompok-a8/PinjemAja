@@ -1,11 +1,29 @@
-<header class="site-header">
-        <div class="container">
-            <a href="#home" class="brand">PinjemAja</a>
-            <nav>
-                <a href="#home">Beranda</a>
-                <a href="#my-items">Barang Saya</a>
-                <a href="#my-history">Riwayat Saya</a>
-                <a href="#account">Akun</a>
-            </nav>
-        </div>
+<header class="site-header {% if user.is_authenticated %}is-auth{% else %}is-guest{% endif %}">
+    <div class="header-inner">
+
+        <a href="{% url 'landing_page' %}" class="header-brand">
+            <span class="header-logo">{% include '_logo.html' %}</span>
+            <span class="brand-text">Pinjem<span>Aja</span></span>
+        </a>
+
+        <!-- TODO (modul search): isi action dengan URL pencarian -->
+        <form class="header-search" action="" method="GET" role="search">
+            <span class="search-icon" aria-hidden="true">🔎</span>
+            <input type="text" name="input" placeholder="Cari di PinjemAja" aria-label="Cari barang">
+        </form>
+
+        <nav class="header-nav">
+            <a href="{% url 'landing_page' %}" class="nav-pill">Beranda</a>
+
+            {% if user.is_authenticated %}
+                {# TODO: ganti href dengan URL modul chat dan modul profil #}
+                <a href="#" class="nav-icon-link">💬 <span>Chat</span></a>
+                <a href="#" class="nav-icon-link">👤 <span>User</span></a>
+            {% else %}
+                {# TODO: ganti href dengan URL halaman daftar #}
+                <a href="#" class="nav-outline">Daftar</a>
+            {% endif %}
+        </nav>
+
+    </div>
 </header>

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block meta %}
+<title>{% if mode == 'update' %}Edit Barang{% else %}Tambah Barang{% endif %} - PinjemAja</title>
+<link rel="stylesheet" href="{% static 'item/css/item.css' %}">
+{% endblock meta %}
+
+{% block content %}
+<main class="pa-page">
+    <div class="container">
+        {% include 'item/_messages.html' %}
+
+        <div class="pa-panel">
+            <h1>{% if mode == 'update' %}Edit Barang{% else %}Tambah Barang{% endif %}</h1>
+
+            {% if mode == 'update' and item.images.all %}
+            <section class="pa-photos">
+                <h2>Foto saat ini</h2>
+                <div class="pa-thumbs">
+                    {% for img in item.images.all %}
+                    <form method="post" action="{% url 'item:item_image_delete' item.pk img.pk %}"
+                          class="pa-thumb" onsubmit="return confirm('Hapus foto ini?');">
+                        {% csrf_token %}
+                        <img src="{{ img.image.url }}" alt="Foto {{ forloop.counter }}">
+                        {% if forloop.first %}<span class="pa-thumb-cover">Sampul</span>{% endif %}
+                        <button type="submit" class="pa-thumb-delete" aria-label="Hapus foto {{ forloop.counter }}">&times;</button>
+                    </form>
+                    {% endfor %}
+                </div>
+                <small>Klik &times; untuk menghapus foto. Untuk menambah foto, pilih file baru di formulir di bawah.</small>
+            </section>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" class="pa-form" novalidate>
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                {% for field in form %}
+                <div class="pa-field">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<small>{{ field.help_text }}</small>{% endif %}
+                    {{ field.errors }}
+                </div>
+                {% endfor %}
+
+                
+                <div class="pa-form-actions">
+                    <button type="submit" class="btn-pa-primary">Simpan Barang</button>
+                    {% if mode == 'update' %}
+                    <a href="{% url 'item:item_detail' item.pk %}" class="pa-link">Kembali</a>
+                    {% else %}
+                    <a href="{% url 'item:item_list' %}" class="pa-link">Kembali</a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+</main>
+{% endblock content %}
