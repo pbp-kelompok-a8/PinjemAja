@@ -98,7 +98,7 @@
 
                         {# TODO: ganti href dengan URL modul peminjaman #}
 
-                        <a href="#" class="btn-pa-primary">Ajukan Pinjaman</a>
+                        <a href="{% url 'transaction:form_pinjam' item.pk %}" class="btn-pa-primary">Ajukan Pinjaman</a>
                         {% endif %}
 
                         {# TODO: ganti href dengan URL modul chat #}
