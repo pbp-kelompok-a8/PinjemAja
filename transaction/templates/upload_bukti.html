@@ -70,13 +70,13 @@
                         <p class="form-text">Format gambar (JPG/PNG), maksimal 5MB.</p>
 
                         <div class="d-flex gap-2 mt-3">
-                            <button type="submit" class="btn transaksi-action action-primary">
-                                {% if is_edit %}Update Bukti{% else %}Kirim Bukti{% endif %}
-                            </button>
                             <a href="{% url 'transaction:detail_transaksi' transaksi.id %}"
                                 class="btn action-outline">
                                 Batal
                             </a>
+                            <button type="submit" class="btn transaksi-action action-primary">
+                                {% if is_edit %}Update Bukti{% else %}Kirim Bukti{% endif %}
+                            </button>
                         </div>
                     </form>
                 </div>

@@ -626,6 +626,10 @@
 
 .transaction-rejection-note p { margin: 0; color: #48443f; line-height: 1.6; }
 
+.transaction-borrower-note {
+    border-left-color: var(--pa-green);
+}
+
 .transaction-detail-image {
     aspect-ratio: 4 / 3;
     max-height: 420px;

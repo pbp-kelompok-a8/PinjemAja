@@ -78,6 +78,12 @@
 
                     <p class="transaction-info"> Durasi: {{ durasi }} hari</p>
                     <p class="transaction-info"> Total harga: Rp{{ transaksi.total_harga }}</p>
+                    {% if transaksi.pesan_peminjam %}
+                        <section class="transaction-rejection-note transaction-borrower-note">
+                            <h3>Catatan untuk pemilik</h3>
+                            <p>{{ transaksi.pesan_peminjam|linebreaksbr }}</p>
+                        </section>
+                    {% endif %}
                                         {% if transaksi.status == 'selesai' %}
                         <p class="status-text status-selesai">
                             {{ transaksi.get_status_display }}
