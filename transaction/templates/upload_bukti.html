@@ -3,13 +3,13 @@
 
 {% block meta %}
     <title>{% if is_update %}Update{% else %}Upload{% endif %} Bukti Pembayaran - PinjemAja</title>
-    <link rel="stylesheet" href="/static/css/transaction.css">
+    <link rel="stylesheet" href="/static/css/transaction.css?v=3">
 {% endblock meta %}
 
 {% block content %}
-<main class="transaksi-page py-5">
+<main class="transaksi-page payment-page py-5">
     <div class="container-xl">
-        <section class="transaction-panel p-3 p-md-4 p-lg-5">
+        <section class="transaction-panel payment-panel p-3 p-md-4 p-lg-5">
             <h1 class="transaction-title text-center mb-4">Pembayaran Pinjaman</h1>
             <div class="row g-4">
                 <div class="col-12 col-md-5">
@@ -27,11 +27,11 @@
                     <p class="status-text">Total: Rp{{ transaksi.total_harga}}</p>
 
                     <section class="bank-detail p-3 mb-4">
-                        <h3 class="barang-title">Rekening pemilik</h3>
-                        {% if info_bank %}
-                            <p class="mb-1">{{ info_bank.nama_bank }}</p>
-                            <p class="mb-1">Nomor rekening: {{ info_bank.nomor_rekening }}</p>
-                            <p class="mb-0">Atas nama: {{ info_bank.nama_pemilik }}</p>
+                        <h3 class="barang-title">Detail Pembayaran Pemilik</h3>
+                        {% if info_bank and info_bank.has_payment_info %}
+                            <p class="mb-1">{{ info_bank.payment_provider }}</p>
+                            <p class="mb-1">Nomor rekening / e-wallet: {{ info_bank.payment_number }}</p>
+                            <p class="mb-0">Atas nama: {{ info_bank.payment_holder }}</p>
                         {% else %}
                             <p class="mb-0">Informasi rekening pemilik belum tersedia.</p>
                         {% endif %}
@@ -74,7 +74,7 @@
                                 {% if is_edit %}Update Bukti{% else %}Kirim Bukti{% endif %}
                             </button>
                             <a href="{% url 'transaction:detail_transaksi' transaksi.id %}"
-                                class="btn btn-secondary">
+                                class="btn action-outline">
                                 Batal
                             </a>
                         </div>

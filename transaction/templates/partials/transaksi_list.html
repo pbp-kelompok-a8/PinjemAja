@@ -61,22 +61,18 @@
 
                             {% if transaksi.status == 'menunggu_verifikasi' %}
                                 <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
-                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %} " class="form-aksi" data-aksi="batal">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="status_filter" value="{{ status_filter }}">
-                                    <button type="submit" name="aksi" value="batal"
-                                            class="btn transaksi-action action-danger">
-                                        Tolak
-                                    </button>
-                                </form>
-                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi" data-aksi="terima">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="status_filter" value="{{ status_filter }}">
-                                    <button type="submit" name="aksi" value="terima"
-                                            class="btn transaksi-action action-primary">
-                                        Terima
-                                    </button>
-                                </form>
+                                <div class="transaction-decision-actions">
+                                    <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi" data-aksi="batal">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="status_filter" value="{{ status_filter }}">
+                                        <button type="submit" name="aksi" value="batal" class="btn transaksi-action action-danger">Tolak</button>
+                                    </form>
+                                    <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi" data-aksi="terima">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="status_filter" value="{{ status_filter }}">
+                                        <button type="submit" name="aksi" value="terima" class="btn transaksi-action action-primary">Terima</button>
+                                    </form>
+                                </div>
                             {% elif transaksi.status == 'menunggu_konfirmasi' %}
                                 <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-detail">Lihat Bukti</a>
                             {% elif transaksi.status == 'ditolak' %}

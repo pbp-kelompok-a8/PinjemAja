@@ -122,11 +122,112 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     document.addEventListener('click', function (e) {
+        const ratingButton = e.target.closest('.transaction-open-rating');
+        if (ratingButton) {
+            const dialog = document.getElementById(ratingButton.dataset.ratingDialog);
+            if (dialog && !dialog.open) dialog.showModal();
+        }
+
         const btn = e.target.closest('.btn-tolak');
         if (!btn) return;
         const formTolak = document.getElementById('formTolak');
         if (formTolak) {
             formTolak.action = btn.dataset.url;
+        }
+    });
+
+    document.addEventListener('submit', async function (e) {
+        const form = e.target.closest('form.rating-ajax-form');
+        if (!form) return;
+        e.preventDefault();
+
+        const submitter = e.submitter;
+        const formData = submitter ? new FormData(form, submitter) : new FormData(form);
+        const button = submitter || form.querySelector('button[type="submit"]');
+        if (button) button.disabled = true;
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken') || getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: formData,
+            });
+            const toastHeader = response.headers.get('X-Toast');
+            if (toastHeader) {
+                const toast = JSON.parse(toastHeader);
+                showToast(toast.title, toast.message, toast.type);
+            }
+
+            if (!response.ok) {
+                if (button) button.disabled = false;
+                return;
+            }
+
+            const newRating = response.headers.get('X-Owner-Rating');
+            const ratingElement = document.getElementById('transaction-owner-rating');
+            if (newRating && ratingElement) {
+                const rating = Number(newRating).toFixed(1);
+                ratingElement.textContent = `★ ${rating}`;
+                ratingElement.setAttribute('aria-label', `Rating ${rating} dari 5`);
+            }
+            document.querySelector('.transaction-rating-dialog')?.remove();
+        } catch (error) {
+            console.error(error);
+            showToast('Gagal', 'Rating belum terkirim. Coba lagi.', 'error');
+            if (button) button.disabled = false;
+        }
+    });
+
+    document.addEventListener('submit', async function (e) {
+        const form = e.target.closest('form.tolak-bukti-form, form.form-aksi');
+        if (!form || form.closest('#transaksi-list')) return;
+        e.preventDefault();
+
+        const submitter = e.submitter;
+        const formData = submitter ? new FormData(form, submitter) : new FormData(form);
+        const button = submitter || form.querySelector('button[type="submit"]');
+        const originalText = button?.textContent;
+        if (button) {
+            button.disabled = true;
+            button.textContent = 'Memproses…';
+        }
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken') || getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: formData,
+            });
+            const toastHeader = response.headers.get('X-Toast');
+            if (toastHeader) {
+                const toast = JSON.parse(toastHeader);
+                showToast(toast.title, toast.message, toast.type);
+            }
+
+            if (!response.ok) {
+                if (button) {
+                    button.disabled = false;
+                    button.textContent = originalText;
+                }
+                return;
+            }
+
+            const popover = form.closest('[popover]');
+            if (popover?.matches(':popover-open')) popover.hidePopover();
+            window.setTimeout(() => window.location.reload(), 3200);
+        } catch (error) {
+            console.error(error);
+            showToast('Gagal', 'Aksi belum berhasil. Coba lagi.', 'error');
+            if (button) {
+                button.disabled = false;
+                button.textContent = originalText;
+            }
         }
     });
 });

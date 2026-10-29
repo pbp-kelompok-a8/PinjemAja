@@ -46,6 +46,8 @@ class Transaksi(models.Model):
     catatan_penolakan = models.TextField(blank=True)
     dibatalkan_oleh = models.CharField(max_length=20, blank=True)
     dibatalkan_pada = models.DateTimeField(null=True, blank=True)
+    rating_pemilik = models.PositiveSmallIntegerField(null=True, blank=True)
+    rating_dilewati = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def hitung_total(self):
@@ -62,6 +64,10 @@ class Transaksi(models.Model):
         if durasi <= 0:
             return 0
         return self.barang.price * durasi
+
+    @property
+    def sudah_diberi_rating(self):
+        return self.rating_pemilik is not None
 
     def save(self, *args, **kwargs):
         if self.harga_terkunci:

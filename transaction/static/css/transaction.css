@@ -74,6 +74,85 @@
     background-color: var(--pa-white);
     border-radius: 14px;
     box-shadow: 3px 5px 7px rgba(0, 0, 0, .2);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.transaksi-card:hover {
+    position: relative;
+    z-index: 2;
+    transform: translateY(-3px) scale(1.015);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .18);
+}
+
+.transaction-decision-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: .65rem;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.transaction-decision-actions form {
+    display: flex;
+    min-width: 0;
+    margin: 0;
+}
+
+.transaction-decision-actions .btn {
+    width: 100%;
+    max-width: 100%;
+    min-height: 42px;
+    padding: .5rem .65rem;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+}
+
+.transaction-detail-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: .65rem;
+    width: 100%;
+    min-width: 0;
+    margin-top: .5rem;
+}
+
+.transaction-detail-actions > a,
+.transaction-detail-actions > form {
+    display: flex;
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+}
+
+.transaction-detail-actions > a.btn,
+.transaction-detail-actions > form > .btn {
+    width: 100%;
+    min-width: 0;
+    min-height: 42px;
+    align-items: center;
+    justify-content: center;
+    padding: .55rem .65rem;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    text-align: center;
+    white-space: normal;
+}
+
+.transaction-detail-actions > form > .btn {
+    display: flex;
+}
+
+.transaction-detail-actions.transaction-resend-actions {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.transaksi-card .transaction-decision-actions {
+    width: min(100%, 320px);
+    margin: .35rem auto 0;
 }
 
 .transaksi-image {
@@ -128,7 +207,7 @@
 .barang-title { 
     margin: 0; 
     font-size: 1.1rem; 
-    font-weight: 700; 
+    font-weight: 700;
 }
 
 .barang-owner, .barang-peminjam { 
@@ -198,7 +277,6 @@
     border-color: #666;
     background: transparent;
     color: #444;
-    transform: translateY(-1px);
 }
 
 .riwayat-empty, .request-empty { 
@@ -212,6 +290,61 @@
 .request-form .form-select-input { 
     width: 100%; 
 }
+
+/* Keep the pickup method control the same size and baseline as the other fields. */
+.request-form .form-select {
+    min-height: 46px;
+    padding: .65rem 2.5rem .65rem 1rem;
+    border: 2px solid var(--pa-green);
+    border-radius: 8px;
+    color: var(--pa-green);
+    line-height: 1.4;
+}
+
+.request-form .form-select:focus {
+    border-color: var(--pa-green);
+    box-shadow: 0 0 0 .2rem rgba(12, 104, 63, .18);
+}
+
+.request-section {
+    min-height: calc(100vh - 80px);
+    background: var(--pa-green);
+}
+
+.transaction-form-panel {
+    border: 1px solid var(--pa-yellow);
+    border-radius: 16px;
+    background: var(--pa-cream);
+}
+
+.transaction-form-panel .transaction-title { color: var(--pa-green); }
+.transaction-form-actions > .btn {
+    display: inline-flex;
+    min-width: 0;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    padding: .65rem 1rem;
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: center;
+}
+
+.payment-panel { max-width: 1080px; }
+.payment-page .transaksi-image { aspect-ratio: 4 / 3; max-height: 420px; }
+.payment-page .barang-title { color: var(--pa-green); font-size: clamp(1.35rem, 2vw, 1.8rem); }
+.payment-page .bank-detail {
+    border: 1px solid var(--pa-border);
+    border-left: 4px solid var(--pa-yellow);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, .58);
+}
+.payment-page .bank-detail p { color: #424742; line-height: 1.6; }
+.payment-page .form-text { color: var(--pa-muted); }
+.payment-page .form-control { width: 100%; }
+.payment-page .img-thumbnail { border-color: var(--pa-border); border-radius: 10px; }
+.payment-page form > .d-flex .btn { min-height: 44px; font-weight: 600; }
+.payment-page form > .d-flex > .btn { flex: 1 1 0; }
 
 .transaksi-page .transaction-panel {
     background-color: var(--pa-cream);
@@ -240,7 +373,6 @@
     background: transparent;
     border-color: currentColor;
     color: var(--pa-green-dark);
-    transform: translateY(-1px);
 }
 
 .transaksi-card a.action-danger,
@@ -299,11 +431,216 @@
     gap: clamp(1.5rem, 4vw, 3rem);
 }
 
+.transaction-detail-media {
+    min-width: 0;
+}
+
+.transaction-person {
+    display: flex;
+    align-items: center;
+    gap: .8rem;
+    margin: 0 0 1rem;
+}
+
+.transaction-person-avatar {
+    display: grid;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 50%;
+    background: var(--pa-green);
+    color: var(--pa-white);
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.transaction-person-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.transaction-person-info {
+    display: grid;
+    min-width: 0;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    column-gap: .75rem;
+}
+
+.transaction-person-name,
+.transaction-person-username {
+    overflow: hidden;
+    color: #393939;
+    font-weight: 700;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.transaction-person-name { font-size: 1.05rem; }
+.transaction-person-username { grid-column: 1; color: var(--pa-green); font-size: .88rem; }
+.transaction-person-rating { grid-column: 2; grid-row: 1 / span 2; color: #8A6400; font-weight: 700; white-space: nowrap; }
+.transaction-person-username:hover,
+.transaction-person-link a:hover { color: var(--pa-green-dark); text-decoration: underline; }
+
+.transaction-detail .transaction-detail-image {
+    position: static;
+    width: 100%;
+}
+
+.transaction-view-item {
+    display: block;
+    margin-top: 0.4rem;
+    font-weight: 600;
+    text-align: right;
+}
+
+.transaction-view-item:hover, .btn-link:hover { color: var(--pa-green); }
+
+.transaction-rental-dates {
+    margin: 0 0 .25rem;
+    color: #464646;
+    font-size: clamp(1rem, 1.8vw, 1.3rem);
+}
+
+.transaction-detail-divider {
+    margin: .35rem 0 .8rem;
+    border-color: rgba(50, 50, 50, .45);
+    opacity: 1;
+}
+
+.transaction-item-carousel,
+.transaction-item-carousel .carousel-inner,
+.transaction-item-carousel .carousel-item {
+    width: 100%;
+    height: auto;
+}
+
+.transaction-item-carousel .carousel-item img {
+    display: block;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    max-height: 420px;
+    border-radius: 9px;
+    background: var(--pa-green);
+    object-fit: cover;
+}
+
+.transaction-item-carousel .carousel-indicators {
+    margin-bottom: .5rem;
+}
+
+.transaction-item-carousel .carousel-indicators [data-bs-target] {
+    width: 9px;
+    height: 9px;
+    border: 0;
+    border-radius: 50%;
+}
+
+.transaction-item-carousel .carousel-control-prev,
+.transaction-item-carousel .carousel-control-next {
+    width: 15%;
+}
+
+.transaction-person-link {
+    margin: 0 0 .35rem;
+}
+
+.transaction-person-link a { color: var(--pa-green); font-weight: 600; text-decoration: none; }
+
+.transaction-detail .status-text.status-batal,
+.transaction-detail .status-text.status-ditolak {
+    background: #FDE8E7;
+    color: var(--pa-red);
+}
+
+.transaction-rating-dialog {
+    position: fixed;
+    z-index: 1055;
+    inset: 0;
+    display: grid;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    place-items: center;
+    padding: 1rem;
+    border: 0;
+    background: rgba(18, 38, 32, .58);
+}
+
+.transaction-rating-dialog:not([open]) { display: none; }
+.transaction-rating-dialog::backdrop { background: transparent; }
+
+.transaction-rating-card {
+    position: relative;
+    width: min(100%, 430px);
+    padding: 2rem;
+    border: 1px solid var(--pa-yellow);
+    border-radius: 18px;
+    background: var(--pa-cream);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+    text-align: center;
+}
+
+.transaction-rating-card h2 { color: var(--pa-green); font-size: 1.45rem; font-weight: 700; }
+.rating-eyebrow { margin-bottom: .4rem; color: var(--pa-muted); font-size: .85rem; }
+.rating-dismiss-form { position: absolute; top: .5rem; right: .65rem; margin: 0 !important; }
+.rating-close { border: 0; background: transparent; color: #59635e; font-size: 2rem; line-height: 1; }
+.rating-close:hover { color: var(--pa-red); }
+.transaction-rating-form fieldset { display: flex; justify-content: center; gap: .25rem; margin: 1.2rem 0; padding: 0; border: 0; }
+.rating-choice { cursor: pointer; color: #C9C3B8; font-size: 2.25rem; line-height: 1; transition: color .15s ease, transform .15s ease; }
+.rating-choice input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.rating-choice:has(input:checked),
+.rating-choice:has(input:checked) ~ .rating-choice { color: #C9C3B8; }
+.transaction-rating-form fieldset:has(.rating-choice:nth-of-type(1) input:checked) .rating-choice:nth-of-type(-n+1),
+.transaction-rating-form fieldset:has(.rating-choice:nth-of-type(2) input:checked) .rating-choice:nth-of-type(-n+2),
+.transaction-rating-form fieldset:has(.rating-choice:nth-of-type(3) input:checked) .rating-choice:nth-of-type(-n+3),
+.transaction-rating-form fieldset:has(.rating-choice:nth-of-type(4) input:checked) .rating-choice:nth-of-type(-n+4),
+.transaction-rating-form fieldset:has(.rating-choice:nth-of-type(5) input:checked) .rating-choice:nth-of-type(-n+5) { color: #D99A00; }
+.rating-choice:focus-within { outline: 2px solid var(--pa-green); outline-offset: 3px; }
+.transaction-rating-form > button { width: 100%; min-height: 44px; }
+
+.transaction-open-rating { align-self: flex-start; min-width: 150px; }
+
+.transaction-rejection-note {
+    margin: .8rem 0;
+    padding: 1rem 1.15rem;
+    border: 1px solid var(--pa-yellow);
+    border-left: 4px solid var(--pa-red);
+    border-radius: 14px;
+    background: var(--pa-cream);
+    box-shadow: 0 8px 22px rgba(18, 51, 41, .12);
+}
+
+.transaction-rejection-note h3 {
+    margin: 0 0 .45rem;
+    color: var(--pa-red);
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.transaction-rejection-note p { margin: 0; color: #48443f; line-height: 1.6; }
+
 .transaction-detail-image {
     aspect-ratio: 4 / 3;
     max-height: 420px;
     position: sticky;
     top: 1.5rem;
+}
+
+@media (max-width: 767.98px) {
+    .transaction-detail-media { padding-right: 0; padding-bottom: 1rem; border-right: 0; border-bottom: 1px solid rgba(24, 65, 54, .35); }
+    .transaction-detail-grid { grid-template-columns: minmax(0, 1fr); }
+    .transaction-detail-image { position: static; max-height: 300px; }
+    .transaction-item-carousel .carousel-item img { max-height: 300px; }
+    .payment-page form > .d-flex { flex-direction: column; }
+    .transaction-form-actions { flex-direction: column; }
+    .transaction-form-actions > .btn { width: 100%; flex: 0 0 auto; }
 }
 
 .transaction-detail .transaksi-body {
@@ -359,6 +696,145 @@
     min-height: 42px;
     align-items: center;
     justify-content: center;
+}
+
+.transaction-detail .transaksi-body .transaction-detail-actions > a,
+.transaction-detail .transaksi-body .transaction-detail-actions > form,
+.transaction-detail .transaksi-body .transaction-detail-actions > button,
+.transaction-detail .transaksi-body .transaction-detail-actions > form > .btn {
+    margin: 0;
+}
+
+/* Dialog penolakan bukti memakai panel dan overlay yang sama dengan dialog rating. */
+.tolak-bukti-modal[popover] {
+    position: fixed;
+    inset: 0;
+    width: min(100% - 2rem, 480px);
+    max-width: 480px;
+    max-height: min(90vh, 640px);
+    margin: auto;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    color: inherit;
+}
+
+.tolak-bukti-modal::backdrop {
+    background: rgba(18, 38, 32, .58);
+    backdrop-filter: blur(2px);
+}
+
+.tolak-bukti-modal__content {
+    position: relative;
+    padding: 2rem;
+    border: 1px solid var(--pa-yellow);
+    border-radius: 18px;
+    background: var(--pa-cream);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, .25);
+}
+
+.tolak-bukti-modal__title {
+    margin: 0 2rem .65rem 0;
+    color: var(--pa-green);
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.tolak-bukti-modal__content > p {
+    margin-bottom: 1.25rem;
+    color: #514d47;
+    line-height: 1.55;
+}
+
+.tolak-bukti-modal__close {
+    position: absolute;
+    top: .55rem;
+    right: .7rem;
+    display: grid;
+    width: 38px;
+    height: 38px;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--pa-muted);
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.tolak-bukti-modal__close:hover { background: #FDE8E7; color: var(--pa-red); }
+
+.tolak-bukti-modal__label {
+    display: block;
+    margin-bottom: .4rem;
+    color: var(--pa-green);
+    font-weight: 700;
+}
+
+.tolak-bukti-modal__textarea {
+    display: block;
+    width: 100%;
+    min-height: 120px;
+    padding: .75rem .9rem;
+    border: 1px solid #B8C4BD;
+    border-radius: 10px;
+    background: #fff;
+    color: #303631;
+    resize: vertical;
+}
+
+.tolak-bukti-modal__textarea:focus {
+    border-color: var(--pa-green);
+    outline: 3px solid rgba(24, 65, 54, .14);
+}
+
+.tolak-bukti-modal__error {
+    margin-top: .55rem;
+    color: var(--pa-red);
+    font-size: .9rem;
+}
+
+.tolak-bukti-modal__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .7rem;
+    margin-top: 1.1rem;
+}
+
+.tolak-bukti-modal__actions button {
+    min-width: 0;
+    min-height: 44px;
+    padding: .55rem .7rem;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    font: inherit;
+    font-weight: 700;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+    transition: background-color .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+}
+
+.tolak-bukti-modal__back {
+    border-color: #929892 !important;
+    background: transparent;
+    color: #626a64;
+}
+
+.tolak-bukti-modal__back:hover { border-color: #626a64 !important; background: #ebe7df; color: #454b47; }
+
+.tolak-bukti-modal__submit {
+    background: var(--pa-red);
+    color: var(--pa-white);
+}
+
+.tolak-bukti-modal__submit:hover { background: #a50d0d; }
+.tolak-bukti-modal__actions button:active { transform: translateY(1px); }
+
+@media (max-width: 480px) {
+    .tolak-bukti-modal__content { padding: 1.5rem 1.15rem 1.15rem; }
+    .tolak-bukti-modal__title { font-size: 1.2rem; }
+    .tolak-bukti-modal__actions { grid-template-columns: 1fr; }
 }
 
 

@@ -3,7 +3,7 @@
 
 {% block meta %}
     <title>Pengajuan Peminjaman Barang </title>
-    <link rel="stylesheet" href="{% static 'css/transaction.css' %}">
+    <link rel="stylesheet" href="{% static 'css/transaction.css' %}?v=4">
 {% endblock meta %}
 
 {% block content %}
@@ -11,8 +11,8 @@
         <section class="request-section py-5">
             <div class="container">
                 <div class="row justify-content-center">
-                <div class="col-12 col-lg-9">
-                    <h1 class="transaction-title mb-5 text-center">{% if is_edit %}Edit Transaksi{% else %}Form Pengajuan{% endif %}</h1>
+                <div class="col-12 col-lg-9 transaction-form-panel p-3 p-md-4 p-lg-5">
+                    <h1 class="transaction-title mb-4 text-center">{% if is_edit %}Edit Transaksi{% else %}Form Pengajuan{% endif %}</h1>
                         <form method="post"
                             action="{% if is_edit %}{% url 'transaction:edit_transaksi' transaksi.id %}{% else %}{% url 'transaction:form_pinjam' barang.id %}{% endif %}"
                             class="request-form">
@@ -35,16 +35,16 @@
                                 </div>
                             </div>
                             <div class="row">
-                                <div class="col-md-9 offset-md-3 d-flex gap-3">
-                                    <button type="submit" class="button btn-warning flex-fill text-center">
+                                <div class="col-md-9 offset-md-3 d-flex gap-3 transaction-form-actions">
+                                    <a href="{% if is_edit %}{% url 'transaction:riwayat_meminjam' %}{% else %}{% url 'item:item_detail' barang.id %}{% endif %}"
+                                    class="btn action-outline flex-fill text-center">Batal</a>
+                                    <button type="submit" class="btn transaksi-action action-primary flex-fill text-center">
                                         {% if is_edit %}
                                             Simpan Perubahan
                                         {% else %}
                                             Kirim Pengajuan
                                         {% endif %}
                                     </button>
-                                    <a href="{% if is_edit %}{% url 'transaction:riwayat_meminjam'%} {% else  %} {% url 'item:item_detail' barang.id %} {% endif %}" 
-                                    class="button btn-secondary flex-fill text-center">Batalkan</a>
                                 </div>
                             </div>
                         </form>

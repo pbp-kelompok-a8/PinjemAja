@@ -8,6 +8,8 @@ from django.contrib import messages
 from django.views.decorators.http import require_POST
 from django.utils import timezone
 from django.urls import reverse
+from django.db.models import Avg
+from urllib.parse import urlencode
 
 from .models import Transaksi
 from item.models import Item
@@ -62,13 +64,16 @@ def permintaan_masuk(request):
 @login_required
 def upload_bukti(request, transaksi_id):
     transaksi = get_object_or_404(
-        Transaksi.objects.select_related("barang", "pemilik"),
+        Transaksi.objects.select_related("barang", "pemilik", "pemilik__profile"),
         pk=transaksi_id,
         peminjam=request.user,
         status="menunggu_pembayaran",
         metode_pengambilan__in=["ambil_sendiri", "dikirim"],
     )
-    form = FormUploadBukti(request.POST or None, request.FILES or None, instance=transaksi)
+    if request.method == "POST":
+        form = FormUploadBukti(request.POST, request.FILES, instance=transaksi)
+    else:
+        form = FormUploadBukti(instance=transaksi)
 
     if request.method == "POST" and form.is_valid():
         transaksi = form.save(commit=False)
@@ -84,12 +89,16 @@ def upload_bukti(request, transaksi_id):
         "form": form,
         "durasi": durasi,
         "total_harga": transaksi.total_harga,
+        "info_bank": getattr(transaksi.pemilik, "profile", None),
     })
 
 @login_required
 def detail_transaksi(request, transaksi_id):
     update_transaksi_selesai()
-    transaksi = get_object_or_404 (Transaksi.objects.select_related("barang", "peminjam", "pemilik"), pk=transaksi_id)
+    transaksi = get_object_or_404(
+        Transaksi.objects.select_related("barang", "peminjam", "pemilik", "pemilik__profile", "peminjam__profile").prefetch_related("barang__images"),
+        pk=transaksi_id,
+    )
 
     if request.user.pk not in (transaksi.peminjam_id, transaksi.pemilik_id):
         messages.error(request, "Anda tidak memiliki akses.")
@@ -102,6 +111,52 @@ def detail_transaksi(request, transaksi_id):
         "total_harga": transaksi.total_harga,
         "is_peminjam": request.user == transaksi.peminjam,
     })
+
+@login_required
+@require_POST
+def rating_pemilik(request, transaksi_id):
+    transaksi = get_object_or_404(
+        Transaksi.objects.select_related("pemilik__profile"),
+        pk=transaksi_id,
+        peminjam=request.user,
+        status="selesai",
+        rating_pemilik__isnull=True,
+        rating_dilewati=False,
+    )
+    action = request.POST.get("action")
+    if action == "skip":
+        transaksi.rating_dilewati = True
+        transaksi.save(update_fields=["rating_dilewati"])
+        title, message, toast_type = "Rating dilewati", "Terima kasih sudah memberi tahu kami.", "normal"
+    else:
+        try:
+            nilai = int(request.POST.get("rating", ""))
+        except (TypeError, ValueError):
+            nilai = 0
+        if nilai not in range(1, 6):
+            if _is_ajax(request):
+                return _toast_html("", "Rating belum dipilih", "Pilih rating antara 1 sampai 5 bintang.", "error", status=400)
+            messages.error(request, "Pilih rating antara 1 sampai 5 bintang.")
+            return redirect("transaction:detail_transaksi", transaksi_id=transaksi.pk)
+
+        transaksi.rating_pemilik = nilai
+        transaksi.save(update_fields=["rating_pemilik"])
+        profile = transaksi.pemilik.profile
+        profile.rating = Transaksi.objects.filter(
+            pemilik=transaksi.pemilik, rating_pemilik__isnull=False,
+        ).aggregate(rata_rata=Avg("rating_pemilik"))["rata_rata"] or 0
+        profile.save(update_fields=["rating"])
+        title, message, toast_type = "Rating terkirim", "Terima kasih sudah memberi rating kepada pemilik.", "success"
+    if _is_ajax(request):
+        response = _toast_html("", title, message, toast_type)
+        response["X-Owner-Rating"] = str(transaksi.pemilik.profile.rating)
+        response["X-Rating-Action"] = action or "rate"
+        return response
+    if action == "skip":
+        messages.info(request, message)
+    else:
+        messages.success(request, message)
+    return redirect("transaction:detail_transaksi", transaksi_id=transaksi.pk)
 
 @login_required
 def edit_transaksi(request, transaksi_id):
@@ -123,12 +178,11 @@ def edit_transaksi(request, transaksi_id):
         form = FormPinjam(instance=transaksi)
 
     durasi = (transaksi.tanggal_selesai - transaksi.tanggal_mulai).days + 1
-    return render(request, 'detail_transaksi.html', {
+    return render(request, 'form_pinjam.html', {
+        'barang': transaksi.barang,
         'transaksi': transaksi,
-        'durasi': durasi,
-        'total_harga': transaksi.total_harga,
-        'is_peminjam': transaksi.peminjam_id == request.user.pk,
         'form': form,
+        'is_edit': True,
     })
 
 def _is_ajax(request):
@@ -174,11 +228,14 @@ def aksi(request, transaksi_id):
     borrower = transaksi.peminjam_id == request.user.pk
 
     if borrower:
-        redirect_url = reverse('transaction:riwayat_meminjam')
+        base_url = reverse('transaction:riwayat_meminjam')
     elif owner:
-        redirect_url = reverse('transaction:permintaan_masuk')
+        base_url = reverse('transaction:permintaan_masuk')
     else:
-        redirect_url = reverse('transaction:detail_transaksi', args=[transaksi.id])
+        base_url = reverse('transaction:detail_transaksi', args=[transaksi.id])
+
+    status_filter = request.POST.get('status_filter', 'semua')
+    redirect_url = f"{base_url}?{urlencode({'status': status_filter})}"
 
     if not (owner or borrower):
         if _is_ajax(request):
@@ -226,7 +283,6 @@ def aksi(request, transaksi_id):
     pesan = f'Transaksi berhasil diperbarui menjadi "{transaksi.get_status_display()}".'
 
     if _is_ajax(request):
-        status_filter = request.POST.get('status_filter', 'semua')
         role = 'peminjam' if borrower else 'pemilik'
         transaksi_list = _get_transaksi_list(request.user, status_filter, role)
 
@@ -240,56 +296,9 @@ def aksi(request, transaksi_id):
     messages.success(request, pesan)
     return redirect(redirect_url)
 
-# @login_required
-# @require_POST
-# def aksi(request, transaksi_id):
-#     transaksi = get_object_or_404(Transaksi, pk=transaksi_id)
-#     action = request.POST.get('aksi')
-
-#     if request.user.pk not in (transaksi.peminjam_id, transaksi.pemilik_id):
-#         return _respon_error(request, 'Anda tidak memiliki akses.', redirect_url, status=403)
-
-#     if  transaksi.peminjam_id == request.user.pk:
-#         redirect_url = reverse('transaction:riwayat_meminjam')
-#     elif transaksi.pemilik_id == request.user.pk:
-#         redirect_url = reverse('transaction:permintaan_masuk')
-#     else:
-#         redirect_url = reverse('transaction:detail_transaksi', args=[transaksi.id])
-    
-#     # tombol
-#     transitions = {
-#         ('menunggu_verifikasi', 'batal', False): ('dibatalkan', 'Peminjam'),
-#         ('menunggu_verifikasi', 'batal', True):  ('dibatalkan', 'Pemilik'),
-#         ('menunggu_verifikasi', 'terima', True):    ('menunggu_pembayaran', None),
-#         ('menunggu_konfirmasi', 'tolak', True):     ('ditolak', None),
-#         ('menunggu_konfirmasi', 'terima', True):    ('disetujui', None),
-#         ('ditolak', 'kirim_ulang', False):          ('menunggu_verifikasi', None),
-#     }
-
-#     result = transitions.get((transaksi.status, action,  transaksi.pemilik_id == request.user.pk))
-
-#     if not result:
-#         return _respon_error(request, 'Aksi tidak tersedia untuk status ini.', redirect_url, status=403)
-
-#     alasan = request.POST.get('alasan', '').strip()
-
-#     if action == 'tolak' and not alasan:
-#         return _respon_error(request, 'Alasan penolakan wajib diisi.', redirect_url)
-
-#     transaksi.status = result[0]
-#     if result[1]:
-#         transaksi.dibatalkan_oleh = result[1]
-#         transaksi.dibatalkan_pada = timezone.now()
-#     if action == 'tolak':
-#         transaksi.catatan_penolakan = alasan
-#     transaksi.save()
-
-#     pesan = f'Transaksi berhasil diperbarui menjadi "{transaksi.get_status_display()}".'
-#     return _respon_ok(request, transaksi, pesan, redirect_url)
-
 def edit_bukti(request, transaksi_id):
     transaksi = get_object_or_404(
-            Transaksi,
+            Transaksi.objects.select_related("barang", "pemilik", "pemilik__profile"),
             pk=transaksi_id,
             peminjam=request.user,
             status__in=['menunggu_konfirmasi', 'ditolak'],
@@ -307,8 +316,7 @@ def edit_bukti(request, transaksi_id):
 
             if file_lama and file_lama.name != transaksi.bukti_pembayaran.name:
                 file_lama.delete(save=False)
-
-                messages.success(request, 'Bukti pembayaran berhasil diperbarui.')
+            messages.success(request, 'Bukti pembayaran berhasil diperbarui.')
             return redirect('transaction:detail_transaksi', transaksi_id=transaksi.id)
         else:
             messages.error(request, 'Gagal menyimpan bukti. Periksa file yang diunggah.')
@@ -323,6 +331,7 @@ def edit_bukti(request, transaksi_id):
         # info_bank : transaksi.profil.bank hrsnya tp blm ada
         "durasi": durasi,
         'is_edit': True,
+        'info_bank': getattr(transaksi.pemilik, "profile", None),
     })
 
 def update_transaksi_selesai():

@@ -3,7 +3,7 @@
 
 {% block meta %}
     <title>Detail Transaksi - PinjemAja</title>
-    <link rel="stylesheet" href="/static/css/transaction.css?v=2">
+    <link rel="stylesheet" href="/static/css/transaction.css?v=4">
 {% endblock meta %}
 
 {% block content %}
@@ -15,49 +15,70 @@
             </a>
             <h1 class="transaction-title text-center mb-4">Detail Transaksi</h1>
             <div class="transaction-detail-grid">
-                {% if transaksi.barang.cover_image %}
-                    <img
-                        src="{{ transaksi.barang.cover_image.image.url }}"
-                        alt="{{ transaksi.barang.name }}"
-                        class="transaksi-image transaction-detail-image"
-                    >
-                {% else %}
-                    <div class="transaksi-image transaction-detail-image image-placeholder">
-                        Gambar<br>Katalog
+                <div class="transaction-detail-media">
+                    <div class="transaction-person transaction-owner">
+                        <a class="transaction-person-avatar" href="{% if transaksi.pemilik_id == request.user.id %}{% url 'userprofile:my_profile' %}{% else %}{% url 'userprofile:public_profile' transaksi.pemilik_id %}{% endif %}" aria-label="Profil {{ transaksi.pemilik.username }}">
+                            {% if transaksi.pemilik.profile.avatar %}
+                                <img src="{{ transaksi.pemilik.profile.avatar.url }}" alt="Foto profil {{ transaksi.pemilik.username }}">
+                            {% else %}
+                                <span aria-hidden="true">{{ transaksi.pemilik.username|first|upper }}</span>
+                            {% endif %}
+                        </a>
+                        <div class="transaction-person-info">
+                            <a class="transaction-person-name" href="{% if transaksi.pemilik_id == request.user.id %}{% url 'userprofile:my_profile' %}{% else %}{% url 'userprofile:public_profile' transaksi.pemilik_id %}{% endif %}">
+                                {{ transaksi.pemilik.first_name|default:transaksi.pemilik.username }}
+                            </a>
+                            <a class="transaction-person-username" href="{% if transaksi.pemilik_id == request.user.id %}{% url 'userprofile:my_profile' %}{% else %}{% url 'userprofile:public_profile' transaksi.pemilik_id %}{% endif %}">@{{ transaksi.pemilik.username }}</a>
+                            <span id="transaction-owner-rating" class="transaction-person-rating" aria-label="Rating {{ transaksi.pemilik.profile.rating|floatformat:1 }} dari 5">★ {{ transaksi.pemilik.profile.rating|floatformat:1 }}</span>
+                        </div>
                     </div>
-                {% endif %}
+                    {% with images=transaksi.barang.images.all %}
+                        {% if images %}
+                            <div id="transactionItemCarousel-{{ transaksi.pk }}" class="carousel slide transaction-item-carousel" data-bs-ride="false" aria-label="Foto {{ transaksi.barang.name }}">
+                                {% if images|length > 1 %}
+                                    <div class="carousel-indicators">
+                                        {% for img in images %}
+                                            <button type="button" data-bs-target="#transactionItemCarousel-{{ transaksi.pk }}" data-bs-slide-to="{{ forloop.counter0 }}" {% if forloop.first %}class="active" aria-current="true"{% endif %} aria-label="Foto {{ forloop.counter }}"></button>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="carousel-inner">
+                                    {% for img in images %}
+                                        <div class="carousel-item{% if forloop.first %} active{% endif %}">
+                                            <img src="{{ img.image.url }}" alt="{{ transaksi.barang.name }} - foto {{ forloop.counter }}">
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                                {% if images|length > 1 %}
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#transactionItemCarousel-{{ transaksi.pk }}" data-bs-slide="prev"><span class="carousel-control-prev-icon" aria-hidden="true"></span><span class="visually-hidden">Foto sebelumnya</span></button>
+                                    <button class="carousel-control-next" type="button" data-bs-target="#transactionItemCarousel-{{ transaksi.pk }}" data-bs-slide="next"><span class="carousel-control-next-icon" aria-hidden="true"></span><span class="visually-hidden">Foto berikutnya</span></button>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="transaksi-image transaction-detail-image image-placeholder">Gambar<br>Katalog</div>
+                        {% endif %}
+                    {% endwith %}
+                    <a class="btn btn-link transaction-view-item" href="{% url 'item:item_detail' transaksi.barang_id %}">→ Lihat Barang</a>
+                </div>
                 <div class="transaksi-body">
                     <h2 class="barang-title">
                         {{ transaksi.barang.name }}
                     </h2>
 
-                    {% if is_peminjam %}
-                        <p class="barang-owner">
-                            Pemilik: <a href="{% url 'userprofile:public_profile' transaksi.pemilik_id %}">@{{ transaksi.pemilik.username }}</a>
-                        </p>
-                        <p class="barang-peminjam">
-                            Peminjam: saya
-                        </p>
-                    {% else %}
-                        <p class="barang-owner">
-                            Pemilik: saya
-                        </p>
-                        <p class="barang-peminjam">
-                            Peminjam: <a href="{% url 'userprofile:public_profile' transaksi.peminjam_id %}">@{{ transaksi.peminjam.username }}</a>
-                        </p>
-                    {% endif %}
-
-                    <p class="tanggal-transaksi">
-                        transaksi dibuat pada tanggal: {{ transaksi.created_at|date:"d M Y" }}
+                    <p class="transaction-rental-dates">
+                        {{ transaksi.tanggal_mulai|date:"d M Y" }} – {{ transaksi.tanggal_selesai|date:"d M Y" }}
+                    </p>
+                    <hr class="transaction-detail-divider">
+                    <p class="transaction-person-link">Dipinjam oleh:
+                        <a href="{% if transaksi.peminjam_id == request.user.id %}{% url 'userprofile:my_profile' %}{% else %}{% url 'userprofile:public_profile' transaksi.peminjam_id %}{% endif %}">
+                            {% if transaksi.peminjam.username %}@{{ transaksi.peminjam.username }}{% endif %}
+                            {% if transaksi.peminjam_id == request.user.id %}(saya){% endif %}
+                        </a>
                     </p>
 
-                    <p class="tanggal-transaksi">
-                        {{ transaksi.tanggal_mulai|date:"d M Y" }}
-                        –
-                        {{ transaksi.tanggal_selesai|date:"d M Y" }}
-                    </p>
-
-                    {% if transaksi.status == 'selesai' %}
+                    <p class="transaction-info"> Durasi: {{ durasi }} hari</p>
+                    <p class="transaction-info"> Total harga: Rp{{ transaksi.total_harga }}</p>
+                                        {% if transaksi.status == 'selesai' %}
                         <p class="status-text status-selesai">
                             {{ transaksi.get_status_display }}
                         </p>
@@ -94,15 +115,13 @@
 
                     {% endif %}
 
-                    <p class="transaction-info"> Durasi: {{ durasi }} hari</p>
-                    <p class="transaction-info"> Total harga: Rp{{ transaksi.total_harga }}</p>
                     {% if transaksi.status == 'ditolak' and transaksi.catatan_penolakan %}
-                        <div class="riwayat-empty">
-                            <strong>Alasan penolakan</strong>
+                        <section class="transaction-rejection-note">
+                            <h3>Alasan penolakan</h3>
                             <p>
                                 {{ transaksi.catatan_penolakan|linebreaksbr }}
                             </p>
-                        </div>
+                        </section>
                     {% endif %}
 
                     {% if transaksi.bukti_pembayaran %}
@@ -112,17 +131,18 @@
 
                     {% if is_peminjam %}
                         {% if transaksi.status == 'menunggu_verifikasi'%}
-                            <a class="btn edit-transaksi action-primary" href="{% url 'transaction:edit_transaksi' transaksi.id %}">
-                                Edit Transaksi
-                            </a>
-                            <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi" data-aksi="batal">
-                                {% csrf_token %}
-                                <input type="hidden" name="status_filter" value="{{ status_filter }}">
-                                <button type="submit" name="aksi" value="batal"
-                                        class="btn transaksi-action action-danger">
-                                    Batalkan
-                                </button>
-                            </form>
+                            <div class="transaction-detail-actions">
+                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi" data-aksi="batal">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status_filter" value="{{ status_filter }}">
+                                    <button type="submit" name="aksi" value="batal" class="btn transaksi-action action-danger">
+                                        Batalkan
+                                    </button>
+                                </form>
+                                <a class="btn edit-transaksi action-primary" href="{% url 'transaction:edit_transaksi' transaksi.id %}">
+                                    Edit Transaksi
+                                </a>
+                            </div>
                         {% elif transaksi.status == 'menunggu_pembayaran' %}
                             <a href="{% url 'transaction:upload_bukti' transaksi.id %}" class="btn transaksi-action action-primary">
                                 Unggah Bukti
@@ -134,29 +154,29 @@
                                 Edit Bukti
                             </a>
                         {% elif transaksi.status == 'ditolak' %}
-                            <a href="{% url 'transaction:detail_transaksi' transaksi.id %}" class="btn action-outline">Lihat Detail</a>
-                            <a href="{% url 'transaction:edit_bukti' transaksi.id %}" class="btn transaksi-action action-primary">Kirim Ulang</a>
+                            <div class="transaction-detail-actions transaction-resend-actions">
+                                <a href="{% url 'transaction:edit_bukti' transaksi.id %}" class="btn transaksi-action action-primary">Kirim Ulang</a>
+                            </div>
+                        {% elif transaksi.status == 'selesai' and not transaksi.sudah_diberi_rating and not transaksi.rating_dilewati %}
+                            <button type="button" class="btn transaksi-action action-primary transaction-open-rating" data-rating-dialog="transactionRating-{{ transaksi.pk }}" onclick="document.getElementById('transactionRating-{{ transaksi.pk }}').showModal()">
+                                Beri Rating
+                            </button>
                         {% endif %}
                         
                     {% else %}
                         {% if transaksi.status == 'menunggu_verifikasi' %}
-                            <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi" data-aksi="batal">
-                                {% csrf_token %}
-                                <input type="hidden" name="status_filter" value="{{ status_filter }}">
-                                <button type="submit" name="aksi" value="batal"
-                                    class="btn transaksi-action action-danger">
-                                    Tolak Permintaan
-                                </button>
-                            </form>
-
-                            <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi" data-aksi="terima">
-                                {% csrf_token %}
-                                <input type="hidden" name="status_filter" value="{{ status_filter }}">
-                                <button type="submit" name="aksi" value="terima"
-                                    class="btn transaksi-action action-primary">
-                                Terima Permintaan
-                                </button>
-                            </form>
+                            <div class="transaction-decision-actions transaction-detail-actions">
+                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi" data-aksi="batal">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status_filter" value="{{ status_filter }}">
+                                    <button type="submit" name="aksi" value="batal" class="btn transaksi-action action-danger">Tolak Permintaan</button>
+                                </form>
+                                <form method="post" action="{% url 'transaction:aksi' transaksi.id %}" class="form-aksi" data-aksi="terima">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="status_filter" value="{{ status_filter }}">
+                                    <button type="submit" name="aksi" value="terima" class="btn transaksi-action action-primary">Terima Permintaan</button>
+                                </form>
+                            </div>
 
                         {% elif transaksi.status == 'menunggu_pengambilan' %}
                             <p class="transaction-info">Konfirmasikan setelah barang diserahkan dan pembayaran COD diterima.</p>
@@ -168,8 +188,9 @@
                             </form>
 
                         {% elif transaksi.status == 'menunggu_konfirmasi' %}
+                            <div class="transaction-decision-actions transaction-detail-actions">
                             <button type="button"
-                                class="btn btn-danger"
+                                class="btn transaksi-action action-danger"
                                 popovertarget="modal-tolak-bukti"
                                 popovertargetaction="show"
                                 data-url="{% url 'transaction:aksi' transaksi.id %}">
@@ -184,6 +205,7 @@
                                 Terima Bukti Pembayaran
                                 </button>
                             </form>
+                            </div>
 
                             {% include "components/tolak_bukti.html" with transaksi=transaksi %}
                         {% endif %}
@@ -191,11 +213,40 @@
 
                 </div>
             </div>
+
+            {% if is_peminjam and transaksi.status == 'selesai' and not transaksi.sudah_diberi_rating and not transaksi.rating_dilewati %}
+                <dialog id="transactionRating-{{ transaksi.pk }}" class="transaction-rating-dialog" aria-labelledby="rating-title">
+                    <div class="transaction-rating-card">
+                        <form method="post" action="{% url 'transaction:rating_pemilik' transaksi.id %}" class="rating-dismiss-form rating-ajax-form">
+                            {% csrf_token %}
+                            <button type="submit" name="action" value="skip" class="rating-close" aria-label="Lewati rating" title="Lewati">×</button>
+                        </form>
+                        <p class="rating-eyebrow">Transaksi selesai</p>
+                        <h2 id="rating-title">Bagaimana pengalamanmu?</h2>
+                        <p>Beri rating untuk <strong>{{ transaksi.pemilik.first_name|default:transaksi.pemilik.username }}</strong></p>
+                        <form method="post" action="{% url 'transaction:rating_pemilik' transaksi.id %}" class="transaction-rating-form rating-ajax-form">
+                            {% csrf_token %}
+                            <fieldset>
+                                <legend class="visually-hidden">Pilih rating dari 1 sampai 5 bintang</legend>
+                                {% for star in '12345' %}
+                                    <label class="rating-choice">
+                                        <input type="radio" name="rating" value="{{ star }}" required>
+                                        <span aria-hidden="true">★</span>
+                                        <span class="visually-hidden">{{ star }} bintang</span>
+                                    </label>
+                                {% endfor %}
+                            </fieldset>
+                            <button type="submit" class="btn transaksi-action action-primary">Kirim rating</button>
+                        </form>
+                    </div>
+                </dialog>
+            {% endif %}
         </section>
     </div>
 </main>
 {% endblock content %}
 
 {% block extra_js %}
-<script src="{% static 'transaction/js/transaction.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/transaction.js' %}?v=4"></script>
 {% endblock extra_js %}
