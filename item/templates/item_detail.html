@@ -71,7 +71,11 @@
 
                 <div class="detail-owner">
                     <div class="detail-avatar">{{ item.owner.username|first|upper }}</div>
-                    <span>{{ item.owner.get_full_name|default:item.owner.username }}</span>
+                    {% if is_owner %}
+                        <a href="{% url 'userprofile:my_profile' %}" class="pa-link">{{ item.owner.get_full_name|default:item.owner.username }}</a>
+                    {% else %}
+                        <a href="{% url 'userprofile:public_profile' item.owner.id %}" class="pa-link">{{ item.owner.get_full_name|default:item.owner.username }}</a>
+                    {% endif %}
                 </div>
 
 
