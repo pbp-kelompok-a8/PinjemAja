@@ -97,7 +97,10 @@ API ini digunakan untuk mendukung kebutuhan data lokasi pada fitur pencarian dan
 Dokumentasi: [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API)
 
 **API Wilayah Indonesia**
+
 API ini sebagai sumber data provinsi, kota/kabupaten, kecamatan, dan kelurahan untuk dropdown alamat bertingkat.
+
+Dokumentasi: [emsifa.com/api-wilayah-indonesia](https://www.emsifa.com/api-wilayah-indonesia/)
 
 ---
 
