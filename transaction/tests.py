@@ -30,9 +30,11 @@ class TransactionTestBase(TestCase):
         self.borrower = User.objects.create_user('borrower', password=None)
         self.owner = User.objects.create_user('owner', password=None)
         self.other = User.objects.create_user('other', password=None)
+        self.owner.profile.city = 'Jakarta'
+        self.owner.profile.save(update_fields=['city'])
         self.item = Item.objects.create(
             name='Kamera', description='Kamera untuk disewa', owner=self.owner,
-            price=Decimal('10000'), location='Jakarta',
+            price=Decimal('10000'),
         )
         self.client = Client()
         self.client.force_login(self.borrower)
