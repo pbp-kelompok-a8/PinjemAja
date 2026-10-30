@@ -1,4 +1,4 @@
-
+﻿
 # Pinjem Aja
 
 **Topik Utama:** Sustainable Consumption
@@ -15,6 +15,7 @@ Pinjem Aja adalah platform berbasis komunitas untuk meminjam dan meminjamkan bar
 
 - [Anggota Kelompok](#anggota-kelompok)
 - [Deskripsi Aplikasi](#deskripsi-aplikasi)
+- [Alur Pinjam Barang](#alur-pinjam-barang)
 - [Jenis dan Peran Pengguna](#jenis-dan-peran-pengguna)
 - [Fitur dan Modul](#fitur-dan-modul)
 - [Teknologi dan Integrasi API](#teknologi-dan-integrasi-api)
@@ -40,6 +41,11 @@ Pinjem Aja adalah platform berbasis komunitas untuk meminjam dan meminjamkan bar
 ## Deskripsi Aplikasi
 
 Pinjem Aja adalah platform berbasis komunitas yang memungkinkan pengguna meminjam dan meminjamkan barang. Pengguna dapat mengunggah barang yang sedang tidak digunakan, melengkapi informasi barang, dan menentukan harga sewa. Pengguna lain dapat mencari barang berdasarkan kategori, lokasi, ketersediaan, dan kondisi sebelum mengajukan peminjaman.
+
+## Alur Pinjam Barang
+
+![Demo alur peminjaman Pinjem Aja](assets/chrome_WfMUBELRXe.gif)
+
 
 ### Masalah yang Diselesaikan
 
@@ -274,4 +280,5 @@ Pengembangan PinjemAja dapat dilanjutkan dengan peningkatan pada aspek berikut:
 - Memperluas pengujian alur peminjaman, status transaksi, dan interaksi antarmodul.
 - Meningkatkan penanganan kesalahan ketika layanan eksternal tidak tersedia.
 - Menyempurnakan dokumentasi teknis dan panduan penggunaan aplikasi.
+
 
