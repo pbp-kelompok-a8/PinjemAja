@@ -451,6 +451,15 @@ footer { flex-shrink: 0; }
 .pa-back { display: inline-block; margin-bottom: 24px; color: var(--white); text-decoration: none;}
 .pa-back:hover { color: var(--accent); }
 
+/* Teks kosong ("Belum ada barang...") di atas background hijau */
+.pa-empty { color: var(--white); }
+.pa-empty a {
+    color: var(--white);
+    font-weight: 700;
+    text-decoration: underline;
+}
+.pa-empty a:hover { color: var(--accent); }
+
 .detail-grid {
     display: grid;
     grid-template-columns: minmax(260px, 380px) minmax(0, 1fr) 280px;

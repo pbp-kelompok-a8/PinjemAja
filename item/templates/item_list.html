@@ -11,6 +11,8 @@
     <div class="container">
         {% include 'messages.html' %}
 
+        <a href="{% url 'landing_page' %}" class="pa-link pa-back">&larr; Kembali ke beranda</a>
+
         <div class="pa-heading">
             <h1>{% if selected_category %}{{ selected_category }}{% else %}Rekomendasi Barang{% endif %}</h1>
             {% if user.is_authenticated %}
