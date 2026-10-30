@@ -70,7 +70,7 @@ Pinjem Aja mendorong penggunaan barang secara bersama agar pengguna tidak selalu
 | 1 | Barang | Pemilik dapat membuat, melihat, mengubah, dan menghapus listing; listing mendukung kategori, kondisi, harga, status ketersediaan, dan beberapa foto. | Della Permata Prasilda |
 | 2 | Transaksi | Pengajuan dengan tanggal dan metode pengambilan, persetujuan atau penolakan pemilik, pembayaran transfer atau COD, unggah bukti pembayaran, pembatalan, perubahan status, dan rating pemilik. | Nafeeza Arwatabina |
 | 3 | Pencarian, Filter, dan Lokasi | Pencarian nama/deskripsi, filter kategori, lokasi, kondisi, dan rentang harga, serta pengurutan hasil. Pencarian juga tersedia melalui endpoint JSON untuk pembaruan halaman secara dinamis. | Joceline Nadine Immanuella |
-| 4 | Profil | Registrasi, login, profil pribadi dan publik, informasi pembayaran, serta rating. | Khanyfatul Muflikhat |
+| 4 | Profil | Registrasi, login (dengan rate limiting), profil pribadi dan publik, edit profil (avatar, email, alamat bertingkat, data pembayaran), hapus avatar, nonaktifkan akun, dan hapus akun permanen. | Khanyfatul Muflikhat |
 | 5 | Chat | Percakapan dan pengelolaan pesan antar pengguna. Pesan dan sidebar diperbarui berkala melalui polling browser. | Fatma Widya Rachma |
 
 ---
@@ -95,6 +95,9 @@ Pinjem Aja mendorong penggunaan barang secara bersama agar pengguna tidak selalu
 API ini digunakan untuk mendukung kebutuhan data lokasi pada fitur pencarian dan pemetaan.
 
 Dokumentasi: [Overpass API](https://wiki.openstreetmap.org/wiki/Overpass_API)
+
+**API Wilayah Indonesia**
+API ini sebagai sumber data provinsi, kota/kabupaten, kecamatan, dan kelurahan untuk dropdown alamat bertingkat.
 
 ---
 
