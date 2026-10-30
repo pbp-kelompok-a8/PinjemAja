@@ -15,13 +15,17 @@ def _wilayah(request, key, old):
     v = request.POST.get(key, '').strip()
     return old if (not v or v.startswith(('Pilih', 'Memuat'))) else v[:100]
 
+def _error_items(form):
+    items = []
+    for name, errors in form.errors.items():
+        label = 'Form' if name == '__all__' else str(form[name].label)
+        items.append({
+            'title': label,
+            'message': ' '.join(str(e) for e in list(errors)[:2]),
+            'type': 'error',
+        })
+    return items
 
-def get_form_errors(form):
-    return "\n".join(
-        error
-        for errors in form.errors.values()
-        for error in errors
-    )
 
 def register_view(request):
     if request.method == 'POST':
@@ -48,7 +52,7 @@ def register_htmx(request):
 
     response = render(request, 'userprofile/partials/register_form.html', {'form': form})
     response['HX-Trigger'] = json.dumps({
-        'showToast': {'title': 'Gagal mendaftar', 'message': get_form_errors(form), 'type': 'error'}
+        'showToasts': {'items': _error_items(form)}
     })
     return response
 

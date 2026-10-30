@@ -234,7 +234,7 @@ class RegisterHtmxViewTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn('HX-Trigger', response.headers)
         trigger_data = json.loads(response.headers['HX-Trigger'])
-        self.assertEqual(trigger_data['showToast']['type'], 'error')
+        self.assertEqual(trigger_data['showToasts']['items'][0]['type'], 'error')
         self.assertFalse(User.objects.filter(username='htmxuser2').exists())
 
 

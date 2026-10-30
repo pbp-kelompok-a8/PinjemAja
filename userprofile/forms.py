@@ -17,6 +17,15 @@ class RegisterForm(UserCreationForm):
         widgets = {
             'username': forms.TextInput(attrs={'placeholder': 'Username kamu'}),
         }
+        error_messages = {'username': {
+            'unique': 'Username sudah dipakai.',
+            'invalid': 'Username hanya boleh huruf, angka, dan @ . + - _',
+            'max_length': 'Username maksimal 150 karakter.',
+        }}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].help_text = 'Maks 150 karakter: huruf, angka, @ . + - _'
 
     def clean(self):
         data = super().clean()
