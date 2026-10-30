@@ -195,7 +195,7 @@ def edit_profile_htmx(request):
 
 @login_required
 def public_profile(request, user_id):
-    profile = get_object_or_404(Profile, user__id=user_id)
+    profile = get_object_or_404(Profile.objects.select_related('user'), user__id=user_id, user__is_active=True)
     return render(request, 'userprofile/public_profile.html', {'profile': profile})
 
 @login_required
@@ -237,6 +237,23 @@ def hard_delete_account(request):
     logout(request)
     user.delete()
     messages.success(request, 'Akun dihapus permanen.')
+    response = HttpResponse(status=204)
+    response['HX-Redirect'] = reverse('landing_page')
+    return response
+
+@login_required
+@require_POST
+def soft_delete_account(request):
+    if not request.user.check_password(request.POST.get('password', '')):
+        response = HttpResponse(status=204)
+        response['HX-Trigger'] = json.dumps({'showToast': {
+            'title': 'Gagal', 'message': 'Password salah.', 'type': 'error'}})
+        return response
+
+    request.user.is_active = False
+    request.user.save(update_fields=['is_active'])
+    logout(request)
+    messages.success(request, 'Akun dinonaktifkan.')
     response = HttpResponse(status=204)
     response['HX-Redirect'] = reverse('landing_page')
     return response

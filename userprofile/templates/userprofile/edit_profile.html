@@ -5,6 +5,10 @@
 {% include 'userprofile/partials/edit_profile_form.html' %}
 
 <div class="text-center mt-2">
+    <button type="button" class="btn btn-pinjemaja-dark"
+            onclick="document.getElementById('soft-delete-dialog').showModal()">
+        Nonaktifkan Akun
+    </button>
     <button type="button" class="btn btn-pinjemaja-danger"
             onclick="document.getElementById('hard-delete-dialog').showModal()">
         Hapus Permanen
@@ -25,6 +29,24 @@
             <button type="submit" class="btn btn-pinjemaja-danger">Hapus</button>
             <button type="button" class="btn btn-pinjemaja-back"
                     onclick="document.getElementById('hard-delete-dialog').close()">Batal</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="soft-delete-dialog" style="border:none;border-radius:12px;padding:24px;max-width:380px;width:90%;"
+        onclose="this.querySelector('form').reset()">
+    <form method="post" action="{% url 'userprofile:soft_delete_account' %}"
+          hx-post="{% url 'userprofile:soft_delete_account' %}"
+          hx-on::after-request="document.getElementById('soft-delete-dialog').close()">
+        {% csrf_token %}
+        <h5 class="mb-2">Nonaktifkan Akun?</h5>
+        <p class="text-muted">Akunmu tidak bisa login, tapi datamu tetap tersimpan. Masukkan password untuk konfirmasi.</p>
+        <input type="password" name="password" class="form-control mb-3"
+               required autocomplete="current-password">
+        <div class="d-flex justify-content-between">
+            <button type="submit" class="btn btn-pinjemaja-dark">Nonaktifkan</button>
+            <button type="button" class="btn btn-pinjemaja-back"
+                    onclick="document.getElementById('soft-delete-dialog').close()">Batal</button>
         </div>
     </form>
 </dialog>

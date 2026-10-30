@@ -1,4 +1,5 @@
-from django.urls import path
+from django.urls import path, reverse_lazy
+from django.contrib.auth import views as auth_views
 from . import views
 
 app_name = 'userprofile'
@@ -15,4 +16,5 @@ urlpatterns = [
     path('edit/htmx/', views.edit_profile_htmx, name='edit_profile_htmx'),
     path('edit/avatar/delete/', views.delete_avatar, name='delete_avatar'),
     path('delete/permanent/', views.hard_delete_account, name='hard_delete_account'),
+    path('deactivate/', views.soft_delete_account, name='soft_delete_account'),
 ]
