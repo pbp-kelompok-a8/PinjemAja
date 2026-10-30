@@ -920,6 +920,25 @@
     display: block;
 }
 
+.pjchat-back-to-item {
+    display: inline-flex;
+    align-items: center;
+    width: fit-content;
+    margin-top: 5px;
+
+    color: #176b4a;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-decoration: none;
+
+    transition: color 0.2s ease;
+}
+
+.pjchat-back-to-item:hover {
+    color: #0b3b2c;
+    text-decoration: underline;
+}
+
 
 /* 14. FOCUS DAN AKSESIBILITAS */
 
