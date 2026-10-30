@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, time
 import json
 from django.template.loader import render_to_string
 from django.http import JsonResponse, HttpResponse
@@ -334,22 +334,39 @@ def edit_bukti(request, transaksi_id):
         'info_bank': getattr(transaksi.pemilik, "profile", None),
     })
 
-def update_transaksi_selesai():
-    sekarang = timezone.localdate()
+def update_transaksi_selesai(now=None):
+    now = now or timezone.now()
+    sekarang = timezone.localdate(now)
+    waktu_lokal = timezone.localtime(now)
 
-    # Transaksi yang belum tuntas dibatalkan sehari setelah tanggal mulai.
-    Transaksi.objects.filter(
+    # Transaksi yang belum tuntas dibatalkan setelah tanggal mulai berakhir.
+    transaksi_menunggu = Transaksi.objects.filter(
         status__in=["menunggu_verifikasi", "menunggu_pembayaran", "menunggu_pengambilan", "ditolak"],
+    )
+    transaksi_menunggu.filter(
         tanggal_mulai__lt=sekarang,
     ).update(
         status="dibatalkan",
         dibatalkan_oleh="Sistem",
-        dibatalkan_pada=timezone.now(),
+        dibatalkan_pada=now,
     )
+    if waktu_lokal.time() >= time(23, 59):
+        transaksi_menunggu.filter(
+            tanggal_mulai=sekarang,
+        ).update(
+            status="dibatalkan",
+            dibatalkan_oleh="Sistem",
+            dibatalkan_pada=now,
+        )
 
     Transaksi.objects.filter(
         status="disetujui",
-        tanggal_selesai__lte=sekarang,
+        tanggal_selesai__lt=sekarang,
     ).update(status="selesai")
+    if waktu_lokal.time() >= time(23, 59):
+        Transaksi.objects.filter(
+            status="disetujui",
+            tanggal_selesai=sekarang,
+        ).update(status="selesai")
 
 

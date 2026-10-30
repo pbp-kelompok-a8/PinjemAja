@@ -1,5 +1,5 @@
 from io import BytesIO
-from datetime import timedelta
+from datetime import datetime, time, timedelta
 from decimal import Decimal
 from tempfile import TemporaryDirectory
 
@@ -30,9 +30,11 @@ class TransactionTestBase(TestCase):
         self.borrower = User.objects.create_user('borrower', password=None)
         self.owner = User.objects.create_user('owner', password=None)
         self.other = User.objects.create_user('other', password=None)
+        self.owner.profile.city = 'Jakarta'
+        self.owner.profile.save(update_fields=['city'])
         self.item = Item.objects.create(
             name='Kamera', description='Kamera untuk disewa', owner=self.owner,
-            price=Decimal('10000'), location='Jakarta',
+            price=Decimal('10000'),
         )
         self.client = Client()
         self.client.force_login(self.borrower)
@@ -219,7 +221,10 @@ class TransactionViewTests(TransactionTestBase):
 
     def test_borrowing_history_and_owner_requests_render(self):
         self.make_transaction()
-        self.assertEqual(self.client.get(reverse('transaction:riwayat_meminjam')).status_code, 200)
+        history = self.client.get(reverse('transaction:riwayat_meminjam'))
+        self.assertEqual(history.status_code, 200)
+        self.assertContains(history, 'data-detail-url=')
+        self.assertContains(history, 'role="link"')
         self.client.force_login(self.owner)
         self.assertEqual(self.client.get(reverse('transaction:permintaan_masuk')).status_code, 200)
 
@@ -427,17 +432,42 @@ class TransactionViewTests(TransactionTestBase):
         self.assertEqual(self.client.post(url, {'aksi': 'batal'}, HTTP_X_REQUESTED_WITH='XMLHttpRequest').status_code, 403)
 
     def test_expiration_and_completion_updates(self):
-        yesterday = timezone.localdate() - timedelta(days=1)
+        today = timezone.localdate()
+        yesterday = today - timedelta(days=1)
         pending = self.make_transaction(status='menunggu_pembayaran', tanggal_mulai=yesterday)
+        pending_today = self.make_transaction(
+            status='menunggu_verifikasi', tanggal_mulai=today,
+        )
         approved = self.make_transaction(
             status='disetujui', tanggal_mulai=yesterday - timedelta(days=2), tanggal_selesai=yesterday,
         )
-        update_transaksi_selesai()
+        finishing_today = self.make_transaction(
+            status='disetujui', tanggal_mulai=yesterday, tanggal_selesai=today,
+        )
+        before_deadline = timezone.make_aware(
+            datetime.combine(today, time(23, 58)), timezone.get_current_timezone(),
+        )
+        update_transaksi_selesai(now=before_deadline)
         pending.refresh_from_db()
+        pending_today.refresh_from_db()
         approved.refresh_from_db()
+        finishing_today.refresh_from_db()
         self.assertEqual(pending.status, 'dibatalkan')
         self.assertEqual(pending.dibatalkan_oleh, 'Sistem')
+        self.assertEqual(pending_today.status, 'menunggu_verifikasi')
         self.assertEqual(approved.status, 'selesai')
+        self.assertEqual(finishing_today.status, 'disetujui')
+
+        at_deadline = timezone.make_aware(
+            datetime.combine(today, time(23, 59)), timezone.get_current_timezone(),
+        )
+        update_transaksi_selesai(now=at_deadline)
+        pending_today.refresh_from_db()
+        finishing_today.refresh_from_db()
+        self.assertEqual(pending_today.status, 'dibatalkan')
+        self.assertEqual(pending_today.dibatalkan_oleh, 'Sistem')
+        self.assertEqual(pending_today.dibatalkan_pada, at_deadline)
+        self.assertEqual(finishing_today.status, 'selesai')
 
     def test_ajax_detection_and_toast_response(self):
         from django.test import RequestFactory
