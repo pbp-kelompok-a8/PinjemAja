@@ -2,7 +2,11 @@
     <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
         {% for transaksi in transaksi_list %}
             <div class="col">
-                <article class="transaksi-card status-{{ transaksi.status }} h-100">
+                <article class="transaksi-card status-{{ transaksi.status }} h-100"
+                    data-detail-url="{% url 'transaction:detail_transaksi' transaksi.id %}"
+                    role="link" tabindex="0"
+                    onclick="if (!event.target.closest('a, button, form, input, select, textarea, label, [role=button], [data-bs-toggle]')) window.location.href=this.dataset.detailUrl"
+                    aria-label="Lihat detail transaksi {{ transaksi.barang.name }}">
                     {% if transaksi.barang.cover_image %}
                         <img src="{{ transaksi.barang.cover_image.image.url }}"
                             alt="{{ transaksi.barang.name }}" class="transaksi-image">

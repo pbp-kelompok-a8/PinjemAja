@@ -100,6 +100,18 @@ async function handleFilterClick(link, container, filterNav) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('click', function (e) {
+        const card = e.target.closest('.transaksi-card[data-detail-url]');
+        if (!card || e.target.closest('a, button, form, input, select, textarea, label, [role="button"], [data-bs-toggle]')) return;
+        window.location.assign(card.dataset.detailUrl);
+    });
+
+    document.addEventListener('keydown', function (e) {
+        const card = e.target.closest('.transaksi-card[data-detail-url]');
+        if (!card || e.target !== card || e.key !== 'Enter') return;
+        window.location.assign(card.dataset.detailUrl);
+    });
+
     const container = document.getElementById('transaksi-list');
     const filterNav = document.getElementById('filter-nav');
 
