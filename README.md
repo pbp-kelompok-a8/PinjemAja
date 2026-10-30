@@ -1,4 +1,4 @@
-# PinjemAja
+﻿# PinjemAja
 
 **PinjemAja** adalah aplikasi peminjaman barang berbasis komunitas. Aplikasi ini membantu orang memakai barang yang sudah tersedia di sekitarnya sehingga mereka tidak perlu membeli barang yang hanya digunakan sesekali. Proyek ini mengangkat tema **Sustainable Consumption**.
 
@@ -14,7 +14,7 @@
 
 | Tautan | Alamat |
 |---|---|
-| Aplikasi | [PinjemAja — Pinjam Barang, Jangan Beli](https://khanyfatul-muflikhat-pinjemaja.pws.cs.ui.ac.id/) |
+| Aplikasi | [PinjemAja  —  Pinjam Barang, Jangan Beli](https://khanyfatul-muflikhat-pinjemaja.pws.cs.ui.ac.id/) |
 | Desain | [Wireframe PinjemAja di Figma](https://www.figma.com/design/6dKz48JAYCguCmL9fVptaa/Wireframe-PinjemAja?node-id=0-1&p=f&t=ZN2o0JN1opeWuIMw-0) |
 
 ## Fitur dan modul
@@ -84,10 +84,20 @@ Secara default, pengembangan lokal menggunakan SQLite dan tidak memerlukan `.env
 python manage.py test
 ```
 
-### Penggunaan AI
-1. Modul Transaksi
-Pada bagian modul transaksi, Generative AI seperti Codex dan deepseek digunakan untuk membantu menelaah struktur Django MVT yang sudah ada, mengusulkan alur view dan template, serta merapikan interaksi daftar transaksi dan notifikasi. Prompt yang diberikan disusun secara bertahap dan kontekstual, dengan menyertakan kebutuhan pengguna, peran peminjam/pemilik, status transaksi, serta file yang sedang dikerjakan. Permintaan kemudian dipersempit menjadi perubahan yang bisa ditinjau, misalnya filter riwayat berdasarkan status, aksi tanpa reload melalui AJAX, dan notifikasi hasil aksi. Hasil AI dibandingkan dengan model, URL, template, dan gaya kode proyek, lalu dicek kembali ketika tampilan atau alur tidak sesuai kebutuhan.
+## Penggunaan AI
 
-#### Batasan dan peninjauan manual
-Saya menyadari bahwa AI yang saya gunakan dapat salah memahami nama status, relasi model, aturan transisi, atau konteks template, terutama jika hanya melihat sebagian kode. Saran AI juga belum otomatis membuktikan bahwa aturan akses, validasi unggahan bukti pembayaran, perilaku AJAX, batas tanggal, dan pembaruan status sesuai dengan tujuan aslinya. Oleh karena itu, kode transaksi masih perlu dicek secara manual untuk memastikan alurnya dapat berjalan sesuai dengan yang diharapkan. Perubahan manual yang paling banyak dilakukan adalah pada bagian CSS karena somehow agak tidak sesuai terkadang tampilan design nya. Selain itu, terkadang masih ada kode yang redundant dan tidak diketahui AI karena hanya dicek sebagian kode-nya, sehingga perubahan manual perlu dilakukan.
+Selama pengembangan PinjemAja, anggota tim menggunakan beberapa alat AI generatif, termasuk ChatGPT/Codex, DeepSeek, dan alat AI lain sesuai kebutuhan. AI digunakan sebagai pendamping untuk berdiskusi, memahami kode, mencari kemungkinan penyebab bug, menyusun atau memperbaiki implementasi, dan merapikan dokumentasi pada berbagai modul, seperti barang, pencarian, transaksi, profil, dan chat. AI tidak menjadi sumber data aplikasi dan tidak mengambil keputusan persetujuan transaksi. Data aplikasi tetap berasal dari pengguna dan tersimpan di database proyek.
 
+### Strategi prompt
+
+Prompt dibuat bertahap dan kontekstual, bukan meminta AI menghasilkan seluruh aplikasi sekaligus. Prompt biasanya menjelaskan tujuan fitur, perilaku yang diharapkan, peran pengguna, struktur Django MVT, file atau potongan kode terkait, serta batasan desain dan gaya kode. Untuk antarmuka, hasil juga dibandingkan dengan wireframe atau masukan visual. Tim lalu meninjau jawaban AI, mencoba perubahan dalam konteks proyek, dan memberi arahan lanjutan ketika hasilnya belum sesuai.
+
+### Peninjauan dan perbaikan manual
+
+Hasil AI tidak langsung dianggap benar atau siap digunakan. Kode perlu dicocokkan dengan model, URL, view, template, JavaScript, dan CSS yang benar-benar ada. Pada modul transaksi, misalnya, alur aksi disesuaikan dengan peran peminjam/pemilik dan status transaksi; daftar menggunakan relasi transaksi terhadap `request.user` untuk menentukan pihak yang ditampilkan, sehingga tidak perlu context `is_peminjam` yang redundant. Tampilan dan respons AJAX juga diperbaiki berdasarkan masukan pengguna. Di bagian antarmuka lain, CSS beberapa kali diselaraskan ulang karena hasil awal belum cocok dengan desain yang diharapkan. Tim juga meninjau kode redundant dan menyesuaikan implementasi dengan pola proyek.
+
+### Keterbatasan AI
+
+AI dapat bekerja dengan konteks yang tidak lengkap, keliru membaca nama status atau relasi model, mengusulkan URL yang tidak sesuai, dan melewatkan kondisi tepi. Kode yang tampak benar belum tentu aman atau berjalan sesuai kebutuhan. Saran AI tidak otomatis menjamin otorisasi, validasi input dan file, konsistensi data, aksesibilitas, maupun kompatibilitas lintas browser. Hal ini perlu perhatian khusus pada fitur akun, transaksi, pembayaran, unggahan bukti, pencarian, dan pesan. Karena itu, perubahan tetap perlu ditinjau manusia dan divalidasi melalui test Django serta uji manual di browser; tidak semua skenario dapat dianggap teruji hanya karena AI memberi saran.
+
+AI berfungsi sebagai alat bantu produktivitas dan eksplorasi. Keputusan desain, peninjauan, perbaikan yang diperlukan, dan tanggung jawab atas kode akhir tetap berada pada tim pengembang.
