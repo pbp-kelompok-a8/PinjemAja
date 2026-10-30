@@ -9,6 +9,17 @@
 }
 
 /* ===== Auth pages: Login and Register ===== */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-page,
+.profile-page {
+    flex: 1;
+}
+
 .auth-page {
     background: var(--pinjemaja-green);
     min-height: 80vh;
