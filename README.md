@@ -93,11 +93,27 @@ Selama pengembangan PinjemAja, anggota tim menggunakan beberapa alat AI generati
 Prompt dibuat bertahap dan kontekstual, bukan meminta AI menghasilkan seluruh aplikasi sekaligus. Prompt biasanya menjelaskan tujuan fitur, perilaku yang diharapkan, peran pengguna, struktur Django MVT, file atau potongan kode terkait, serta batasan desain dan gaya kode. Untuk antarmuka, hasil juga dibandingkan dengan wireframe atau masukan visual. Tim lalu meninjau jawaban AI, mencoba perubahan dalam konteks proyek, dan memberi arahan lanjutan ketika hasilnya belum sesuai.
 
 ### Peninjauan dan perbaikan manual
+Seluruh saran AI tetap memerlukan peninjauan dan penyesuaian oleh tim pengembang sebelum digunakan. Kode diperiksa kesesuaiannya dengan model, URL, view, template, JavaScript, CSS, serta alur kerja antarmodul yang sudah ada.
 
-Hasil AI tidak langsung dianggap benar atau siap digunakan. Kode perlu dicocokkan dengan model, URL, view, template, JavaScript, dan CSS yang benar-benar ada. Pada modul transaksi, misalnya, alur aksi disesuaikan dengan peran peminjam/pemilik dan status transaksi; daftar menggunakan relasi transaksi terhadap `request.user` untuk menentukan pihak yang ditampilkan, sehingga tidak perlu context `is_peminjam` yang redundant. Tampilan dan respons AJAX juga diperbaiki berdasarkan masukan pengguna. Di bagian antarmuka lain, CSS beberapa kali diselaraskan ulang karena hasil awal belum cocok dengan desain yang diharapkan. Tim juga meninjau kode redundant dan menyesuaikan implementasi dengan pola proyek.
+Beberapa bentuk peninjauan dan perbaikan manual meliputi:
+
+- **Modul Transaksi:** Menyesuaikan alur transaksi berdasarkan peran peminjam dan pemilik barang, status transaksi, serta relasi data dengan pengguna yang sedang login. Pada daftar transaksi, relasi transaksi terhadap `request.user` digunakan untuk menentukan transaksi yang relevan tanpa menambahkan context `is_peminjam` yang redundan.
+- **Antarmuka:** Menyesuaikan CSS dan tata letak ketika hasil awal belum sesuai dengan wireframe atau desain yang diharapkan. Tampilan dan respons AJAX juga diperbaiki berdasarkan masukan pengguna.
+- **Integrasi Modul:** Memeriksa kesesuaian nama URL, relasi model, struktur template, dan interaksi JavaScript agar implementasi dapat bekerja dengan modul lain.
+- **Kode dan Dokumentasi:** Meninjau kode yang redundan, menyesuaikan solusi dengan pola proyek, serta memperbaiki dokumentasi agar lebih jelas dan mudah dipahami.
+  
 
 ### Keterbatasan AI
+AI memiliki sejumlah keterbatasan yang perlu diperhatikan selama pengembangan, antara lain:
 
-AI dapat bekerja dengan konteks yang tidak lengkap, keliru membaca nama status atau relasi model, mengusulkan URL yang tidak sesuai, dan melewatkan kondisi tepi. Kode yang tampak benar belum tentu aman atau berjalan sesuai kebutuhan. Saran AI tidak otomatis menjamin otorisasi, validasi input dan file, konsistensi data, aksesibilitas, maupun kompatibilitas lintas browser. Hal ini perlu perhatian khusus pada fitur akun, transaksi, pembayaran, unggahan bukti, pencarian, dan pesan. Karena itu, perubahan tetap perlu ditinjau manusia dan divalidasi melalui test Django serta uji manual di browser; tidak semua skenario dapat dianggap teruji hanya karena AI memberi saran.
+- **Konteks terbatas:** AI dapat memberikan solusi yang tidak sesuai jika tidak memperoleh konteks kode atau struktur proyek secara lengkap.
+- **Kesalahan implementasi:** AI dapat keliru memahami nama status transaksi, relasi model, URL, atau alur logika aplikasi.
+- **Risiko keamanan:** Kode yang terlihat benar belum tentu memiliki otorisasi dan validasi input yang memadai, terutama pada fitur akun, transaksi, dan unggahan berkas.
+- **Kesesuaian antarmuka:** Hasil CSS atau komponen UI yang dihasilkan AI belum tentu sesuai dengan wireframe, kebutuhan aksesibilitas, atau tampilan pada berbagai ukuran layar.
+- **Kebutuhan pengujian:** Saran AI tidak menjamin kode bebas bug, konsisten dengan database, atau kompatibel dengan semua browser.
+
+Untuk mengurangi risiko tersebut, tim perlu meninjau hasil AI secara kritis, mencocokkannya dengan kebutuhan proyek, dan melakukan pengujian yang relevan sebelum perubahan dianggap selesai. Perhatian khusus diberikan pada validasi input, hak akses pengguna, konsistensi status transaksi, serta penanganan kondisi tepi (*edge cases*).
 
 AI berfungsi sebagai alat bantu produktivitas dan eksplorasi. Keputusan desain, peninjauan, perbaikan yang diperlukan, dan tanggung jawab atas kode akhir tetap berada pada tim pengembang.
+
+
