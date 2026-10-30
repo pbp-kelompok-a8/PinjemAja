@@ -1,8 +1,10 @@
 import json
 import os
+import re
 import shutil
 import tempfile
 from django.contrib.auth.models import User
+from django.core import mail
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
@@ -10,6 +12,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpResponse
 from django.test import TestCase, Client, RequestFactory, override_settings
 from django.urls import reverse
+from urllib.parse import urlparse
 from .decorators import rate_limit
 from .forms import RegisterForm, ProfileForm, UserEmailForm
 from .models import Profile
@@ -654,4 +657,44 @@ class RateLimitDecoratorTest(TestCase):
         for _ in range(3):
             self.view(self.factory.post('/x/', REMOTE_ADDR='1.1.1.1'))
         other = self.view(self.factory.post('/x/', REMOTE_ADDR='2.2.2.2'))
-        self.assertEqual(other.status_code, 200)        
+        self.assertEqual(other.status_code, 200)
+
+class SoftDeleteAccountTest(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user('testuser', password='testpass123')
+        self.client.login(username='testuser', password='testpass123')
+        self.url = reverse('userprofile:soft_delete_account')
+
+    def test_requires_login(self):
+        self.client.logout()
+        self.assertEqual(self.client.post(self.url, {'password': 'testpass123'}).status_code, 302)
+
+    def test_get_not_allowed(self):
+        self.assertEqual(self.client.get(self.url).status_code, 405)
+
+    def test_wrong_password_keeps_active(self):
+        response = self.client.post(self.url, {'password': 'salah'})
+        self.assertEqual(response.status_code, 204)
+        self.assertIn('HX-Trigger', response.headers)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_active)
+
+    def test_correct_password_deactivates_but_keeps_data(self):
+        response = self.client.post(self.url, {'password': 'testpass123'})
+        self.assertEqual(response.status_code, 204)
+        self.assertIn('HX-Redirect', response.headers)
+        self.user.refresh_from_db()
+        self.assertFalse(self.user.is_active)
+        self.assertTrue(Profile.objects.filter(user=self.user).exists())
+
+    def test_deactivated_user_cannot_login(self):
+        self.client.post(self.url, {'password': 'testpass123'})
+        self.assertFalse(self.client.login(username='testuser', password='testpass123'))
+
+    def test_public_profile_hidden_for_inactive_user(self):
+        viewer = User.objects.create_user('viewer', password='testpass123')
+        self.user.is_active = False
+        self.user.save()
+        self.client.login(username='viewer', password='testpass123')
+        response = self.client.get(reverse('userprofile:public_profile', args=[self.user.id]))
+        self.assertEqual(response.status_code, 404)

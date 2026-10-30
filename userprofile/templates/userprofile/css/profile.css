@@ -223,6 +223,18 @@ body {
     color: #fff;
 }
 
+.btn-pinjemaja-dark {
+    background: var(--pinjemaja-black);
+    color: #fff;
+    border: none;
+    font-weight: 600;
+}
+
+.btn-pinjemaja-dark:hover {
+    background: #333;
+    color: #fff;
+}
+
 .profile-card .btn,
 .auth-card .btn {
     border-radius: 8px;
