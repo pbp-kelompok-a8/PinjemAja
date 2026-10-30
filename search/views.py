@@ -11,14 +11,15 @@ from .forms import SearchForm
 
 def save_search_history(request, query):
     """
-    Menyimpan kata kunci pencarian ke SearchHistory untuk fitur riwayat pencarian (CRUD).
+    Menyimpan riwayat kata kunci pencarian pengguna.
     """
+    # Validasi kata kunci minimal 2 karakter agar pencarian kosong tidak tersimpan
     if not query or len(query.strip()) < 2:
         return
     q = query.strip()
     user = request.user if request.user.is_authenticated else None
 
-    # Cek pencarian terakhir agar tidak ada duplikasi berturut-turut
+    # Cek pencarian terakhir agar tidak menyimpan kata yang sama berulang
     last_search = SearchHistory.objects.filter(user=user).first()
     if not last_search or last_search.keyword.lower() != q.lower():
         SearchHistory.objects.create(user=user, keyword=q)
@@ -26,18 +27,13 @@ def save_search_history(request, query):
 
 def get_filtered_items(request):
     """
-    Fungsi helper untuk menyaring barang berdasarkan parameter GET:
-    - q / input: pencarian nama atau deskripsi
-    - category: daftar kategori yang dipilih
-    - location: lokasi (bisa teks bebas atau pilihan kota)
-    - condition: kondisi barang (baru, baik, cukup)
-    - min_price & max_price: rentang harga
-    - sort: pengurutan (latest, price_asc, price_desc, name_asc)
+    Helper untuk menyaring barang berdasarkan parameter request GET.
     """
+    # Ambil barang berstatus tersedia, optimasi query relasi pemilik dan foto
     items = (Item.objects.filter(status='tersedia')
              .select_related('owner__profile').prefetch_related('images'))
 
-    # 1. Pencarian Kata Kunci (Keyword Search)
+    # 1. Filter kata kunci (mencocokkan nama atau deskripsi barang)
     query = request.GET.get('q', '').strip() or request.GET.get('input', '').strip()
     if query:
         save_search_history(request, query)
@@ -45,15 +41,15 @@ def get_filtered_items(request):
             Q(name__icontains=query) | Q(description__icontains=query)
         )
 
-    # 2. Filter Kategori (Checkbox / URL Param)
+    # 2. Filter kategori barang (mendukung multi-select checkbox)
     categories = request.GET.getlist('category')
-    # Support juga jika category dikirim sebagai string dipisah koma
+    # Parsing jika kategori dikirim sebagai string yang dipisah tanda koma
     if not categories and request.GET.get('category'):
         categories = [c.strip() for c in request.GET.get('category').split(',') if c.strip()]
     if categories:
         items = items.filter(category__in=categories)
 
-    # 3. Filter Lokasi (Checkbox / Free Text)
+    # 3. Filter lokasi kota barang
     locations = request.GET.getlist('location')
     if not locations and request.GET.get('location'):
         loc_str = request.GET.get('location').strip()
@@ -62,7 +58,7 @@ def get_filtered_items(request):
         else:
             locations = [loc_str]
 
-    # Cek jika ada request khusus 'nearby=1' memakai kota dari user profile
+    # Ambil domisili kota pengguna jika opsi kota terdekat diaktifkan
     if (request.GET.get('nearby') == '1' or request.GET.get('nearest') == '1') and request.user.is_authenticated:
         if hasattr(request.user, 'profile') and request.user.profile.city:
             user_city_nearby = request.user.profile.city.strip()
@@ -72,19 +68,19 @@ def get_filtered_items(request):
     if locations:
         loc_filter = Q()
         for loc in locations:
-            # Lokasi barang = lokasi pemilik (profil): cocokkan kota atau provinsi
+            # Cocokkan dengan kota atau provinsi pada profil pemilik barang
             loc_filter |= (Q(owner__profile__city__icontains=loc)
                            | Q(owner__profile__province__icontains=loc))
         items = items.filter(loc_filter)
 
-    # 4. Filter Kondisi Barang
+    # 4. Filter kondisi barang
     conditions = request.GET.getlist('condition')
     if not conditions and request.GET.get('condition'):
         conditions = [c.strip() for c in request.GET.get('condition').split(',') if c.strip()]
     if conditions:
         items = items.filter(condition__in=conditions)
 
-    # 5. Filter Rentang Harga (Min & Max)
+    # 5. Filter batas harga minimum dan maksimum
     min_price = request.GET.get('min_price')
     if min_price:
         try:
@@ -99,7 +95,7 @@ def get_filtered_items(request):
         except ValueError:
             pass
 
-    # 6. Pengurutan (Sorting)
+    # 6. Pengurutan data barang
     sort = request.GET.get('sort', 'latest')
     if sort == 'price_asc':
         items = items.order_by('price')
@@ -107,7 +103,8 @@ def get_filtered_items(request):
         items = items.order_by('-price')
     elif sort == 'name_asc':
         items = items.order_by('name')
-    else:  # default 'latest'
+    else:
+        # Default diurutkan dari yang paling baru
         items = items.order_by('-created_at')
 
     return items
@@ -115,30 +112,32 @@ def get_filtered_items(request):
 
 def search_page(request):
     """
-    Halaman utama pencarian & filter barang.
-    Menampilkan UI lengkap dengan sidebar filter dan daftar barang awal.
+    Menampilkan halaman utama pencarian dan filter.
     """
+    # Ambil data barang yang sudah difilter
     items = get_filtered_items(request)
 
-    # Ambil daftar lokasi unik yang ada di database (dari profil pemilik)
+    # Ambil daftar lokasi unik dari database (domisili pemilik barang)
     db_locations = list(Item.objects.values_list('owner__profile__city', flat=True).distinct())
     clean_locations = sorted(list({loc.strip().title() for loc in db_locations if loc and loc.strip()}))
 
-    # Jika database masih kosong/sedikit, sertakan default kota populer
+    # Daftar opsi kota default jika database masih sedikit
     default_locations = ['Jakarta', 'Depok', 'Bandung', 'Bogor', 'Tangerang', 'Bekasi', 'Surabaya', 'Yogyakarta']
     all_locations = sorted(list(set(clean_locations + default_locations)))
 
+    # Tangkap parameter filter yang sedang aktif untuk status form
     initial_query = request.GET.get('q', '').strip() or request.GET.get('input', '').strip()
     selected_category = request.GET.get('category', '')
     selected_categories = request.GET.getlist('category')
     if not selected_categories and selected_category:
         selected_categories = [c.strip() for c in selected_category.split(',') if c.strip()]
 
-    # Ambil 5 riwayat pencarian terakhir
+    # Ambil 5 riwayat pencarian terakhir milik user
     user = request.user if request.user.is_authenticated else None
     search_histories = SearchHistory.objects.filter(user=user)[:5]
     form = SearchForm(request.GET)
 
+    # Ambil kota domisili user untuk shortcut filter kota terdekat
     user_city = None
     if request.user.is_authenticated and hasattr(request.user, 'profile') and request.user.profile.city:
         user_city = request.user.profile.city.strip()
@@ -161,21 +160,21 @@ def search_page(request):
 
 def search_api(request):
     """
-    Endpoint AJAX JSON untuk menyaring barang secara real-time
-    tanpa reload halaman. Dipanggil oleh JavaScript di frontend.
+    Endpoint JSON untuk request pencarian via AJAX.
     """
     items = get_filtered_items(request)
 
+    # Serialisasi data barang ke format dictionary JSON
     data = []
     for item in items:
         cover = item.cover_image
         image_url = cover.image.url if cover and cover.image else None
 
-        # Gunakan lokasi dari profil pemilik agar konsisten dengan filter
+        # Lokasi barang diambil dari kota profil pemilik
         profile = getattr(item.owner, 'profile', None)
         location_display = profile.city if profile and profile.city else (item.location or '')
 
-        # Gunakan properti dinamis display_status dari Item
+        # Cek status ketersediaan barang secara dinamis
         display_status = item.display_status
         if display_status == 'tersedia':
             status_display = 'Tersedia'
@@ -200,14 +199,14 @@ def search_api(request):
             'formatted_price': f"Rp{int(item.price):,}".replace(',', '.'),
             'location': location_display,
             'condition': item.get_condition_display(),
-            'status': display_status,           # status dinamis
-            'status_display': status_display,   # label untuk UI
-            'is_available': is_available,       # flag untuk frontend
+            'status': display_status,
+            'status_display': status_display,
+            'is_available': is_available,
             'image_url': image_url,
             'detail_url': reverse('item:item_detail', kwargs={'pk': item.pk}),
         })
 
-    # Kirim daftar riwayat pencarian terbaru untuk update AJAX frontend
+    # Ambil 5 riwayat pencarian terbaru untuk respon AJAX
     user = request.user if request.user.is_authenticated else None
     histories = SearchHistory.objects.filter(user=user)[:5]
     history_list = [{'id': h.pk, 'keyword': h.keyword} for h in histories]
@@ -224,10 +223,11 @@ def search_api(request):
 @require_http_methods(["POST", "DELETE"])
 def delete_search_history(request, pk):
     """
-    Menghapus 1 kata kunci dari riwayat pencarian (CRUD - Delete).
+    Menghapus satu data riwayat pencarian.
     """
     try:
         user = request.user if request.user.is_authenticated else None
+        # Pastikan hanya menghapus riwayat milik user terkait
         item = SearchHistory.objects.get(pk=pk, user=user)
         item.delete()
         return JsonResponse({'status': 'success', 'message': 'Riwayat berhasil dihapus.'})
@@ -239,8 +239,9 @@ def delete_search_history(request, pk):
 @require_http_methods(["POST"])
 def clear_search_history(request):
     """
-    Membersihkan semua riwayat pencarian user (CRUD - Delete all).
+    Menghapus seluruh riwayat pencarian pengguna.
     """
     user = request.user if request.user.is_authenticated else None
+    # Hapus semua riwayat yang cocok dengan user
     SearchHistory.objects.filter(user=user).delete()
     return JsonResponse({'status': 'success', 'message': 'Semua riwayat berhasil dibersihkan.'})

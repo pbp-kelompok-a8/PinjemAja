@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="{% static 'item/css/item.css' %}">
 
 <style>
-    /* Styling Khusus Modul Pencarian & Filter Joceline */
+    /* Styling Halaman Pencarian */
     :root {
         --color-brand-primary: #184136;
         --color-brand-yellow: #F3B216;
@@ -143,7 +143,7 @@
         pointer-events: none;
     }
 
-    /* Riwayat Pencarian (Search History CRUD) */
+    /* Riwayat Pencarian */
     .search-history-box {
         margin-top: 8px;
         padding: 8px 10px;
@@ -330,7 +330,7 @@
         padding: 0;
     }
 
-    /* Hilangkan panah spinner bawaan browser pada input number agar tidak bertumpuk */
+    /* Hilangkan spinner bawaan browser pada input number */
     .price-input-box input::-webkit-outer-spin-button,
     .price-input-box input::-webkit-inner-spin-button {
         -webkit-appearance: none;
@@ -439,7 +439,7 @@
         font-size: 0.9rem;
     }
 
-    /* GRID BARANG (SESUAI KATALOG DELLA) */
+    /* Grid Katalog Barang */
     .catalog-grid.loading {
         opacity: 0.4;
         pointer-events: none;
@@ -523,7 +523,7 @@
         
         <div class="search-layout">
             
-            <!-- ================= SISI KIRI: PANEL FILTER ================= -->
+            <!-- Panel Filter -->
             <aside class="filter-panel">
                 <div class="filter-header">
                     <h2 class="filter-title">
@@ -537,7 +537,7 @@
 
                 <form id="filter-form" onsubmit="return false;">
                     
-                    <!-- Kata Kunci / Nama Barang -->
+                    <!-- Kata Kunci -->
                     <div class="filter-group">
                         <label class="filter-group-title" for="search-input-field">Kata Kunci</label>
                         <div class="filter-search-box">
@@ -557,7 +557,7 @@
                             >
                         </div>
 
-                        <!-- Riwayat Pencarian (Search History CRUD) -->
+                        <!-- Riwayat Pencarian -->
                         <div id="search-history-container" class="search-history-box" {% if not search_histories %}style="display: none;"{% endif %}>
                             <div class="search-history-header">
                                 <span>Pencarian Terakhir:</span>
@@ -696,7 +696,7 @@
                         </div>
                     </div>
 
-                    <!-- Tombol Terapkan (Sesuai Wireframe Figma Celine) -->
+                    <!-- Tombol Terapkan -->
                     <button type="button" id="btn-apply-filters" class="btn-apply-filter">
                         Terapkan
                     </button>
@@ -704,7 +704,7 @@
                 </form>
             </aside>
 
-            <!-- ================= SISI KANAN: HASIL PENCARIAN ================= -->
+            <!-- Hasil Pencarian -->
             <section class="results-section">
                 
                 <!-- Bar Jumlah Hasil & Status -->
@@ -714,7 +714,7 @@
                     </h1>
                 </div>
 
-                <!-- Active Filter Tags (opsional) -->
+                <!-- Active Filter Tags -->
                 <div id="active-tags-container" class="active-filters-bar"></div>
 
                 <!-- Loading Spinner -->
@@ -723,7 +723,7 @@
                     <p style="font-size: 0.88rem; color: var(--color-brand-muted);">Menyaring barang...</p>
                 </div>
 
-                <!-- Grid Kartu Barang (Menggunakan item_card.html Della & Figma) -->
+                <!-- Grid Kartu Barang -->
                 <div id="items-grid-container" class="catalog-grid">
                     {% if items %}
                         {% for item in items %}
@@ -746,7 +746,7 @@
     </div>
 </main>
 
-<!-- ================= SIHIR AJAX JAVASCRIPT ================= -->
+<!-- Script Logika AJAX -->
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const filterForm = document.getElementById('filter-form');
@@ -763,23 +763,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let debounceTimer = null;
 
-    // Fungsi Pengumpul Parameter Filter
+    // Ambil parameter filter dari form
     function getFilterParams() {
         const params = new URLSearchParams();
 
-        // Keyword
+        // Kata kunci
         const q = searchInput.value.trim();
         if (q) params.append('q', q);
 
-        // Sort
+        // Urutan
         const sort = sortSelect.value;
         if (sort && sort !== 'latest') params.append('sort', sort);
 
-        // Kategori (Checkboxes)
+        // Kategori
         const checkedCategories = document.querySelectorAll('input[name="category"]:checked');
         checkedCategories.forEach(cb => params.append('category', cb.value));
 
-        // Lokasi (Checkboxes + Text)
+        // Lokasi
         const checkedLocations = document.querySelectorAll('input[name="location"]:checked');
         checkedLocations.forEach(cb => params.append('location', cb.value));
         const locText = locationTextInput.value.trim();
@@ -789,7 +789,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const checkedConditions = document.querySelectorAll('input[name="condition"]:checked');
         checkedConditions.forEach(cb => params.append('condition', cb.value));
 
-        // Rentang Harga
+        // Rentang harga
         const minPrice = minPriceInput.value.trim();
         if (minPrice) params.append('min_price', minPrice);
         const maxPrice = maxPriceInput.value.trim();
@@ -798,12 +798,12 @@ document.addEventListener('DOMContentLoaded', function () {
         return params;
     }
 
-    // Fungsi Utama AJAX Fetch
+    // Request data barang via AJAX
     function fetchFilteredItems() {
         const params = getFilterParams();
         const apiUrl = `{% url 'search:search_api' %}?${params.toString()}`;
 
-        // Efek visual loading halus
+        // Tampilkan status loading
         gridContainer.classList.add('loading');
 
         fetch(apiUrl, {
@@ -820,7 +820,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (data.history) {
                 renderSearchHistory(data.history);
             }
-            // Update URL browser secara mulus tanpa refresh halaman
+            // Update parameter URL di browser
             const newUrl = `${window.location.pathname}?${params.toString()}`;
             window.history.replaceState({}, '', newUrl);
         })
@@ -832,7 +832,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Fungsi Render Hasil JSON ke Kartu HTML
+    // Render data JSON ke elemen kartu HTML
     function renderItems(items, count) {
         countBadge.textContent = count;
 
@@ -884,7 +884,7 @@ document.addEventListener('DOMContentLoaded', function () {
         gridContainer.innerHTML = html;
     }
 
-    // Helper mencegah XSS
+    // Sanitasi string input
     function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/&/g, "&amp;")
@@ -894,27 +894,27 @@ document.addEventListener('DOMContentLoaded', function () {
                   .replace(/'/g, "&#039;");
     }
 
-    // Debounce Helper untuk input ketikan
+    // Debounce input pencarian
     function onSearchInputChanged() {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => {
             fetchFilteredItems();
-        }, 300); // Tunggu 300ms setelah user selesai mengetik
+        }, 300); // Delay 300ms
     }
 
-    // Event Listeners Input & Select
+    // Event listener input filter
     searchInput.addEventListener('input', onSearchInputChanged);
     locationTextInput.addEventListener('input', onSearchInputChanged);
     minPriceInput.addEventListener('input', onSearchInputChanged);
     maxPriceInput.addEventListener('input', onSearchInputChanged);
     sortSelect.addEventListener('change', fetchFilteredItems);
 
-    // Event Listener Checkboxes (Kategori, Lokasi, Kondisi)
+    // Event listener checkbox
     document.querySelectorAll('.filter-checkbox').forEach(cb => {
         cb.addEventListener('change', fetchFilteredItems);
     });
 
-    // Reset All Filters
+    // Reset seluruh filter
     window.resetAllFilters = function () {
         searchInput.value = '';
         locationTextInput.value = '';
@@ -929,7 +929,7 @@ document.addEventListener('DOMContentLoaded', function () {
         fetchFilteredItems();
     };
 
-    // Render Riwayat Pencarian secara Dinamis (AJAX)
+    // Render riwayat pencarian
     function renderSearchHistory(historyList) {
         const historyContainer = document.getElementById('search-history-container');
         const historyChips = document.getElementById('search-history-chips');
@@ -954,13 +954,13 @@ document.addEventListener('DOMContentLoaded', function () {
         historyChips.innerHTML = chipsHtml;
     }
 
-    // Klik Riwayat Pencarian
+    // Terapkan kata kunci dari riwayat
     window.applyHistoryKeyword = function (keyword) {
         searchInput.value = keyword;
         fetchFilteredItems();
     };
 
-    // Hapus 1 Item Riwayat (CRUD - Delete)
+    // Hapus satu riwayat pencarian
     window.deleteHistoryItem = function (id) {
         fetch(`/search/history/${id}/delete/`, {
             method: 'POST',
@@ -980,7 +980,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     };
 
-    // Bersihkan Semua Riwayat (CRUD - Delete All)
+    // Hapus seluruh riwayat pencarian
     window.clearAllHistory = function () {
         fetch('/search/history/clear/', {
             method: 'POST',

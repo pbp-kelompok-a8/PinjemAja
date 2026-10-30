@@ -9,19 +9,24 @@ User = get_user_model()
 
 class SearchModuleTests(TestCase):
     """
-    Unit Test untuk Modul Pencarian & Filter (Celine).
-    Memastikan halaman search, filter AJAX JSON, dan CRUD SearchHistory berjalan 100%.
+    Pengujian unit untuk fitur pencarian, filter, dan riwayat pencarian.
     """
 
     def setUp(self):
+        # Inisialisasi client test
         self.client = Client()
+
+        # Buat user pertama berdomisili di Bandung
         self.user = User.objects.create_user(username='testceline', password='password123')
         self.user.profile.city = 'Bandung'
         self.user.profile.save()
-        # Lokasi barang diambil dari profil pemilik, jadi pemilik kedua dibuat di kota lain
+
+        # Buat user kedua berdomisili di Jakarta Selatan
         self.user2 = User.objects.create_user(username='testceline2', password='password123')
         self.user2.profile.city = 'Jakarta Selatan'
         self.user2.profile.save()
+
+        # Buat data barang contoh untuk pengujian
         self.item1 = Item.objects.create(
             name='Tenda Dome Eiger',
             description='Tenda camping tahan hujan kapasitas 4 orang',
@@ -75,12 +80,12 @@ class SearchModuleTests(TestCase):
         self.assertEqual(data['items'][0]['location'], 'Bandung')
 
     def test_search_history_crud(self):
-        """Memastikan riwayat pencarian (Create, Read, Delete) bekerja normal."""
-        # Create
+        """Memastikan operasi simpan dan hapus riwayat pencarian berjalan dengan baik."""
+        # Test simpan riwayat pencarian
         self.client.get(reverse('search:search_api'), {'q': 'tenda'})
         self.assertTrue(SearchHistory.objects.filter(keyword='tenda').exists())
 
-        # Delete
+        # Test hapus satu riwayat pencarian
         history = SearchHistory.objects.get(keyword='tenda')
         res_del = self.client.post(reverse('search:delete_search_history', args=[history.pk]))
         self.assertEqual(res_del.status_code, 200)
@@ -91,6 +96,7 @@ class SearchModuleTests(TestCase):
         import datetime
         from transaction.models import Transaksi
 
+        # Simulasikan transaksi peminjaman barang item1 yang sudah disetujui
         peminjam = User.objects.create_user(username='peminjam1', password='password123')
         Transaksi.objects.create(
             barang=self.item1,
@@ -110,6 +116,7 @@ class SearchModuleTests(TestCase):
 
     def test_filter_by_user_profile_city(self):
         """Memastikan filter lokasi terdekat membaca kota dari profil user."""
+        # Login sebagai user Bandung
         self.client.force_login(self.user)
 
         response = self.client.get(reverse('search:search_api'), {'nearby': '1'})
