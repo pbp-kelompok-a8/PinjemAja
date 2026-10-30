@@ -9,6 +9,8 @@
 {% block content %}
 <main class="pa-page">
     <div class="container">
+        {% include 'messages.html' %}
+
         <a href="{% url 'item:item_list' %}" class="pa-link pa-back">&larr; Kembali ke daftar barang</a>
 
         <div class="detail-grid">
