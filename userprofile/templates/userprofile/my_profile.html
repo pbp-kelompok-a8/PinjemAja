@@ -8,7 +8,7 @@
             <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
         {% endif %}
     </div>
-    <h5>@{{ request.user.username }}</h5>
+    <h5><a href="{% url 'userprofile:public_profile' request.user.id %}">@{{ request.user.username }}</a></h5>
     <p class="profile-joined">Bergabung {{ request.user.date_joined|date:"M Y" }}</p>
     <a href="{% url 'userprofile:edit_profile' %}" class="btn btn-outline-warning mb-4">Edit Profile</a>
 </div>
