@@ -2,6 +2,7 @@
 {% load static %}
 {% block meta %}
 <link rel="stylesheet" href="{% static 'userprofile/css/profile.css' %}">
+<script src="{% static 'userprofile/js/toast_stack.js' %}" defer></script>
 <script src="https://unpkg.com/htmx.org@1.9.12"  crossorigin="anonymous"></script>
 {% endblock %}
 
@@ -13,8 +14,6 @@
 </div>
 
 <script>
-document.body.addEventListener('showToast', function (evt) {
-    showToast(evt.detail.title, evt.detail.message, evt.detail.type);
-});
+document.body.addEventListener('showToasts', function (evt) { showToastStack(evt.detail.items); });
 </script>
 {% endblock %}
