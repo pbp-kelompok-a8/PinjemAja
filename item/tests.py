@@ -1,14 +1,17 @@
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth.models import User
+from django.urls import NoReverseMatch
+from django.utils.datastructures import MultiValueDict
 import datetime
 import io
 from decimal import Decimal
+from unittest.mock import patch
 
 from PIL import Image
 from django.core.files.uploadedfile import SimpleUploadedFile
 from item.models import Item, ItemImage
-from item.forms import ItemForm, MAX_PRICE
+from item.forms import ItemForm, MAX_PRICE, MultipleImageField
 from transaction.models import Transaksi
 
 class SimpleItemTest(TestCase):
@@ -234,6 +237,99 @@ class SimpleItemTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Item.objects.get(name='Barang Berfoto').images.count(), 2)
 
+    def _png(self, name='a.png'):
+        buffer = io.BytesIO()
+        Image.new('RGB', (4, 4), 'red').save(buffer, format='PNG')
+        return SimpleUploadedFile(name, buffer.getvalue(), content_type='image/png')
+
+    def test_owner_edit_barang_berhasil(self):
+        self.client.login(username='jihyo', password='password123')
+        url = reverse('item:item_update', args=[self.item.pk])
+        response = self.client.post(url, self._item_post_data('Kamera Baru'))
+        self.assertRedirects(response, reverse('item:item_detail', args=[self.item.pk]),
+                             fetch_redirect_response=False)
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.name, 'Kamera Baru')
+        self.assertEqual(self.item.price, Decimal('75000'))
+
+    def test_edit_barang_data_tidak_valid_menampilkan_error(self):
+        self.client.login(username='jihyo', password='password123')
+        data = self._item_post_data()
+        data['price'] = '50.000'   # ada titik -> ditolak
+        response = self.client.post(reverse('item:item_update', args=[self.item.pk]), data)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Masukkan angka saja')
+        self.item.refresh_from_db()
+        self.assertEqual(self.item.price, Decimal('50000'))
+
+    def test_tambah_barang_data_tidak_valid_menampilkan_error(self):
+        self.client.login(username='jihyo', password='password123')
+        data = self._item_post_data('Barang Gagal')
+        data['price'] = '0'
+        response = self.client.post(reverse('item:item_create'), data)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Harga harus lebih dari 0')
+        self.assertFalse(Item.objects.filter(name='Barang Gagal').exists())
+
+    def test_owner_hapus_satu_foto(self):
+        with self.settings(MEDIA_ROOT='/tmp/pinjemaja_test_media'):
+            img = ItemImage.objects.create(item=self.item, image=self._png(), order=0)
+            self.client.login(username='jihyo', password='password123')
+            response = self.client.post(
+                reverse('item:item_image_delete', args=[self.item.pk, img.pk]))
+        self.assertRedirects(response, reverse('item:item_update', args=[self.item.pk]),
+                             fetch_redirect_response=False)
+        self.assertFalse(ItemImage.objects.filter(pk=img.pk).exists())
+
+    def test_orang_lain_tidak_bisa_hapus_foto(self):
+        img = ItemImage.objects.create(item=self.item, image='items/contoh.jpg', order=0)
+        self.client.login(username='tzuyu', password='password123')
+        response = self.client.post(
+            reverse('item:item_image_delete', args=[self.item.pk, img.pk]))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(ItemImage.objects.filter(pk=img.pk).exists())
+
+    def test_orang_lain_tidak_bisa_hapus_barang(self):
+        self.client.login(username='tzuyu', password='password123')
+        response = self.client.post(reverse('item:item_delete', args=[self.item.pk]))
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Item.objects.filter(pk=self.item.pk).exists())
+
+    def test_halaman_konfirmasi_hapus_tampil(self):
+        self.client.login(username='jihyo', password='password123')
+        response = self.client.get(reverse('item:item_delete', args=[self.item.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'item_delete.html')
+
+    def test_chat_url_kosong_jika_app_chat_belum_ada(self):
+        with patch('item.views.reverse', side_effect=NoReverseMatch):
+            response = self.client.get(reverse('item:item_detail', args=[self.item.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.context['chat_url'])
+
+    def test_form_menolak_lebih_dari_5_foto(self):
+        files = MultiValueDict({'images': [self._png(f'{i}.png') for i in range(6)]})
+        form = ItemForm(data=self._item_post_data(), files=files)
+        self.assertFalse(form.is_valid())
+        self.assertIn('images', form.errors)
+
+    def test_form_menolak_foto_lebih_dari_5mb(self):
+        files = MultiValueDict({'images': [self._png()]})
+        with patch('item.forms.MAX_IMAGE_SIZE', 1):   # anggap batasnya 1 byte
+            form = ItemForm(data=self._item_post_data(), files=files)
+            self.assertFalse(form.is_valid())
+        self.assertIn('images', form.errors)
+
+    def test_field_foto_menerima_satu_file(self):
+        hasil = MultipleImageField().clean(self._png())
+        self.assertEqual(len(hasil), 1)
+
+    def test_str_dan_is_available(self):
+        self.assertEqual(str(self.item), 'Kamera Fujifilm (jihyo)')
+        self.assertTrue(self.item.is_available)
+        img = ItemImage.objects.create(item=self.item, image='items/x.jpg', order=2)
+        self.assertEqual(str(img), 'Foto Kamera Fujifilm #2')
+
 
 class ItemLockTest(TestCase):
     """Barang yang sedang dalam transaksi aktif tidak boleh diedit/dihapus."""
@@ -326,3 +422,4 @@ class ItemListPageTest(TestCase):
         response = self.client.get(reverse('item:item_list') + '?category=buku')
         self.assertContains(response, 'class="pa-empty"')
         self.assertContains(response, 'Lihat semua barang')
+        
