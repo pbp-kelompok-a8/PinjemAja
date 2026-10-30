@@ -262,7 +262,11 @@ document.addEventListener('change', function (event) {
     if (event.target.id !== 'id_avatar') return;
     const file = event.target.files && event.target.files[0];
     if (!file || !file.type.startsWith('image/')) return;
-
+    if (file.size > 2 * 1024 * 1024) {
+        showToast('Gagal', 'Ukuran foto maksimal 2 MB.', 'error');
+        event.target.value = '';
+        return;
+    }
     const box = document.querySelector('.profile-avatar');
     if (!box) return;
 

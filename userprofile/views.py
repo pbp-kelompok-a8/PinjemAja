@@ -11,6 +11,11 @@ from .decorators import rate_limit
 from .forms import RegisterForm, ProfileForm, UserEmailForm
 from .models import Profile
 
+def _wilayah(request, key, old):
+    v = request.POST.get(key, '').strip()
+    return old if (not v or v.startswith(('Pilih', 'Memuat'))) else v[:100]
+
+
 def get_form_errors(form):
     return "\n".join(
         error
@@ -90,6 +95,7 @@ def my_profile(request):
 @login_required
 def edit_profile(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
+    old_avatar = profile.avatar.name if profile.avatar else None
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES, instance=profile)
         email_form = (
@@ -109,9 +115,10 @@ def edit_profile(request):
             profile.city = _wilayah(request, 'city', profile.city)
             profile.district = _wilayah(request, 'district', profile.district)
             profile.subdistrict = _wilayah(request, 'subdistrict', profile.subdistrict)
-            profile.street_address = request.POST.get('street_address', '').strip()
+            profile.street_address = request.POST.get('street_address', '').strip()[:300]
             profile.save()
-
+            if old_avatar and 'avatar' in request.FILES and old_avatar != profile.avatar.name:
+                profile.avatar.storage.delete(old_avatar)
             messages.success(request, 'Profil berhasil disimpan.')
             return redirect('userprofile:my_profile')
 
@@ -137,6 +144,7 @@ def edit_profile(request):
 @login_required
 def edit_profile_htmx(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
+    old_avatar = profile.avatar.name if profile.avatar else None
     form = ProfileForm(request.POST, request.FILES, instance=profile)
     email_form = UserEmailForm(request.POST, instance=request.user) if 'email' in request.POST else None
 
@@ -152,11 +160,11 @@ def edit_profile_htmx(request):
         profile.city = _wilayah(request, 'city', profile.city)
         profile.district = _wilayah(request, 'district', profile.district)
         profile.subdistrict = _wilayah(request, 'subdistrict', profile.subdistrict)
-        profile.street_address = request.POST.get(
-            'street_address', ''
-        ).strip()
+        profile.street_address = request.POST.get('street_address', '').strip()[:300]
 
         profile.save()
+        if old_avatar and 'avatar' in request.FILES and old_avatar != profile.avatar.name:
+            profile.avatar.storage.delete(old_avatar)
         messages.success(request, 'Profil berhasil disimpan.')
 
         response = HttpResponse(status=204)
@@ -180,10 +188,6 @@ def edit_profile_htmx(request):
         }
     })
     return response
-
-def _wilayah(request, key, old):
-    v = request.POST.get(key, '').strip()
-    return old if (not v or v.startswith(('Pilih', 'Memuat'))) else v
 
 @login_required
 def public_profile(request, user_id):
