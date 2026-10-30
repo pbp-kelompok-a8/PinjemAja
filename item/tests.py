@@ -233,3 +233,84 @@ class SimpleItemTest(TestCase):
             response = self.client.post(reverse('item:item_create'), data)
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Item.objects.get(name='Barang Berfoto').images.count(), 2)
+
+
+class ItemLockTest(TestCase):
+    """Barang yang sedang dalam transaksi aktif tidak boleh diedit/dihapus."""
+
+    def setUp(self):
+        self.owner = User.objects.create_user(username='owner', password='password123')
+        self.peminjam = User.objects.create_user(username='peminjam', password='password123')
+        self.item = Item.objects.create(
+            owner=self.owner, name='Tenda Dome', description='Tenda 4 orang',
+            category='camping', price=Decimal('30000'), condition='baik',
+        )
+
+    def _transaksi(self, status):
+        return Transaksi.objects.create(
+            barang=self.item, peminjam=self.peminjam, pemilik=self.owner,
+            tanggal_mulai=datetime.date(2026, 11, 1), tanggal_selesai=datetime.date(2026, 11, 3),
+            status=status,
+        )
+
+    def test_status_terkunci(self):
+        for status in ['menunggu_pembayaran', 'menunggu_pengambilan',
+                       'menunggu_konfirmasi', 'disetujui']:
+            Transaksi.objects.all().delete()
+            self._transaksi(status)
+            self.assertTrue(self.item.is_locked, status)
+
+    def test_status_tidak_terkunci(self):
+        for status in ['menunggu_verifikasi', 'ditolak', 'selesai', 'dibatalkan']:
+            Transaksi.objects.all().delete()
+            self._transaksi(status)
+            self.assertFalse(self.item.is_locked, status)
+
+    def test_tanpa_transaksi_tidak_terkunci(self):
+        self.assertFalse(self.item.is_locked)
+
+    def test_edit_diblokir_saat_terkunci(self):
+        self._transaksi('disetujui')
+        self.client.login(username='owner', password='password123')
+        url = reverse('item:item_update', args=[self.item.pk])
+        for method in (self.client.get, self.client.post):
+            response = method(url)
+            self.assertRedirects(response, reverse('item:item_detail', args=[self.item.pk]))
+
+    def test_hapus_diblokir_saat_terkunci(self):
+        self._transaksi('menunggu_konfirmasi')
+        self.client.login(username='owner', password='password123')
+        response = self.client.post(reverse('item:item_delete', args=[self.item.pk]))
+        self.assertRedirects(response, reverse('item:item_detail', args=[self.item.pk]))
+        self.assertTrue(Item.objects.filter(pk=self.item.pk).exists())
+
+    def test_hapus_foto_diblokir_saat_terkunci(self):
+        self._transaksi('menunggu_pembayaran')
+        img = ItemImage.objects.create(
+            item=self.item,
+            image=SimpleUploadedFile('a.png', b'x', content_type='image/png'),
+        )
+        self.client.login(username='owner', password='password123')
+        response = self.client.post(
+            reverse('item:item_image_delete', args=[self.item.pk, img.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(ItemImage.objects.filter(pk=img.pk).exists())
+
+    def test_bisa_hapus_setelah_transaksi_selesai(self):
+        self._transaksi('selesai')
+        self.client.login(username='owner', password='password123')
+        self.client.post(reverse('item:item_delete', args=[self.item.pk]))
+        self.assertFalse(Item.objects.filter(pk=self.item.pk).exists())
+
+    def test_tombol_edit_hapus_nonaktif_di_detail(self):
+        self._transaksi('disetujui')
+        self.client.login(username='owner', password='password123')
+        response = self.client.get(reverse('item:item_detail', args=[self.item.pk]))
+        self.assertNotContains(response, reverse('item:item_update', args=[self.item.pk]))
+        self.assertNotContains(response, reverse('item:item_delete', args=[self.item.pk]))
+
+    def test_detail_punya_link_profil_pemilik(self):
+        self.client.login(username='peminjam', password='password123')
+        response = self.client.get(reverse('item:item_detail', args=[self.item.pk]))
+        self.assertContains(
+            response, reverse('userprofile:public_profile', args=[self.owner.id]))

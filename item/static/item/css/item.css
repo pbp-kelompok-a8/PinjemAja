@@ -31,6 +31,11 @@
     color: var(--accent); 
 }
 
+/* Judul halaman (Rekomendasi Barang / nama kategori) di atas background hijau */
+.pa-heading h1 {
+    color: #F5A623; /* sama dengan warna label kategori (mis. "Camping") di kartu */
+}
+
 /* Wrapper Halaman */
 .pa-page {
     padding: 48px 0 90px;

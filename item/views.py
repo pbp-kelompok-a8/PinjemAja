@@ -31,6 +31,12 @@ def _owner_location(user):
     return Item(owner=user).location
 
 
+LOCKED_MESSAGE = (
+    'Barang sedang dalam proses peminjaman, jadi tidak bisa diedit atau dihapus '
+    'sampai transaksinya selesai.'
+)
+
+
 def _save_images(item, files, start_order=0):
     for offset, f in enumerate(files):
         ItemImage.objects.create(item=item, image=f, order=start_order + offset)
@@ -129,6 +135,9 @@ def item_update(request, pk):
     item = get_object_or_404(Item, pk=pk)
     if item.owner != request.user:
         raise PermissionDenied  
+    if item.is_locked:
+        messages.error(request, LOCKED_MESSAGE)
+        return redirect('item:item_detail', pk=item.pk)
 
     if request.method == 'POST':
         form = ItemForm(request.POST, request.FILES, instance=item)
@@ -160,6 +169,9 @@ def item_image_delete(request, pk, image_pk):
     item = get_object_or_404(Item, pk=pk)
     if item.owner != request.user:
         raise PermissionDenied
+    if item.is_locked:
+        messages.error(request, LOCKED_MESSAGE)
+        return redirect('item:item_detail', pk=item.pk)
 
     image = get_object_or_404(ItemImage, pk=image_pk, item=item)
     image.image.delete(save=False)   
@@ -174,6 +186,9 @@ def item_delete(request, pk):
     item = get_object_or_404(Item, pk=pk)
     if item.owner != request.user:
         raise PermissionDenied 
+    if item.is_locked:
+        messages.error(request, LOCKED_MESSAGE)
+        return redirect('item:item_detail', pk=item.pk)
 
     if request.method == 'POST':
         item.delete()
