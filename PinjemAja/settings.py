@@ -28,9 +28,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-n5$i@x)w97zwb6marw08mmr&e0xdrs#v2msw$wl4e5e)-@=z6('
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["localhost", "127.0.0.1", "testserver", "khanyfatul-muflikhat-pinjemaja.pws.cs.ui.ac.id"]
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://khanyfatul-muflikhat-pinjemaja.pws.cs.ui.ac.id",
+]
+
 PRODUCTION = os.getenv('PRODUCTION', 'False').lower() == 'true'
 
 
