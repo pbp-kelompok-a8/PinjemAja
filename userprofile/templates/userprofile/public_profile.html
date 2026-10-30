@@ -15,9 +15,17 @@
             {% endif %}
         </div>
         <h4>{{ profile.user.username }}</h4>
+        <p class="text-center mb-2">
+            <span class="joined-chip">Bergabung {{ profile.user.date_joined|date:"M Y" }}</span>
+        </p>
+
+        <div class="profile-meta">
+            <span class="meta-item">
+                {% if profile.rating %}Rating {{ profile.rating|floatformat:1 }}/5{% else %}Belum ada rating{% endif %}
+            </span>
+            {% if profile.city %}<span class="meta-item">{{ profile.city }}</span>{% endif %}
+        </div>
         <p>{{ profile.bio|default:"-" }}</p>
-        <p><strong>Kota:</strong> {{ profile.city|default:"-" }}</p>
-        <p><strong>Rating:</strong> {{ profile.rating }}</p>
     </div>
   </div>
 </div>

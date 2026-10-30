@@ -7,8 +7,16 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
+from .decorators import rate_limit
 from .forms import RegisterForm, ProfileForm, UserEmailForm
 from .models import Profile
+
+def get_form_errors(form):
+    return "\n".join(
+        error
+        for errors in form.errors.values()
+        for error in errors
+    )
 
 def register_view(request):
     if request.method == 'POST':
@@ -35,10 +43,11 @@ def register_htmx(request):
 
     response = render(request, 'userprofile/partials/register_form.html', {'form': form})
     response['HX-Trigger'] = json.dumps({
-        'showToast': {'title': 'Gagal mendaftar', 'message': 'Periksa kembali data yang kamu masukkan.', 'type': 'error'}
+        'showToast': {'title': 'Gagal mendaftar', 'message': get_form_errors(form), 'type': 'error'}
     })
     return response
 
+@rate_limit('login', limit=5, period=300)
 def login_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
@@ -51,6 +60,7 @@ def login_view(request):
         form = AuthenticationForm()
     return render(request, 'userprofile/login.html', {'form': form})
 
+@rate_limit('login', limit=5, period=300)
 @require_POST
 def login_htmx(request):
     form = AuthenticationForm(request, data=request.POST)

@@ -71,7 +71,11 @@
 
                 <div class="detail-owner">
                     <div class="detail-avatar">{{ item.owner.username|first|upper }}</div>
-                    <span>{{ item.owner.get_full_name|default:item.owner.username }}</span>
+                    {% if is_owner %}
+                        <a href="{% url 'userprofile:my_profile' %}" class="pa-link">{{ item.owner.get_full_name|default:item.owner.username }}</a>
+                    {% else %}
+                        <a href="{% url 'userprofile:public_profile' item.owner.id %}" class="pa-link">{{ item.owner.get_full_name|default:item.owner.username }}</a>
+                    {% endif %}
                 </div>
 
 
@@ -98,8 +102,14 @@
 
                 <div class="status-card-body">
                     {% if is_owner %}
-                        <a href="{% url 'item:item_update' item.pk %}" class="btn-pa-primary is-block">Edit Barang</a>
-                        <a href="{% url 'item:item_delete' item.pk %}" class="btn-pa-danger is-block">Hapus Barang</a>
+                        {% if item.is_locked %}
+                            <span class="btn-pa-waiting is-disabled is-block">🔒 Edit Barang</span>
+                            <span class="btn-pa-waiting is-disabled is-block mt-2">🔒 Hapus Barang</span>
+                            <p class="small text-muted text-center mt-2 mb-0">Barang sedang dipinjam/diproses, tidak bisa diedit atau dihapus dulu.</p>
+                        {% else %}
+                            <a href="{% url 'item:item_update' item.pk %}" class="btn-pa-primary is-block">Edit Barang</a>
+                            <a href="{% url 'item:item_delete' item.pk %}" class="btn-pa-danger is-block">Hapus Barang</a>
+                        {% endif %}
                     
                         {% elif user.is_authenticated %}
                         

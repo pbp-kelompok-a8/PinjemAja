@@ -606,7 +606,7 @@ a {
 .toast-hidden { opacity: 0; transform: translateY(150%); pointer-events: none; }
 .toast-show { opacity: 1; transform: translateY(0); }
 .toast-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.15rem; }
-.toast-message { font-size: 0.85rem; color: #555; }
+.toast-message { font-size: 0.85rem; color: #555; white-space: pre-line;}
 .toast-success { border-left: 4px solid #22c55e; }
 .toast-error { border-left: 4px solid #C81010; }
 .toast-normal { border-left: 4px solid #F3B216; }

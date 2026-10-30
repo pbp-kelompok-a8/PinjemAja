@@ -26,13 +26,18 @@
                 <div class="pjchat-contact">
                     <strong>{{ other_participant.username }}</strong>
 
-                    <small>
-                        {% if conversation.item %}
-                            Barang: {{ conversation.item.name }}
-                        {% else %}
-                            Tidak ada barang terkait
-                        {% endif %}
-                    </small>
+                    {% if conversation.item %}
+                        <small>Barang: {{ conversation.item.name }}</small>
+
+                        <a
+                            href="{% url 'item:item_detail' conversation.item.pk %}"
+                            class="pjchat-back-to-item"
+                        >
+                            ← Kembali ke Detail Barang
+                        </a>
+                    {% else %}
+                        <small>Tidak ada barang terkait</small>
+                    {% endif %}
                 </div>
             </header>
 

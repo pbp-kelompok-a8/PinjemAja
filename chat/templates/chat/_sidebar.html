@@ -53,12 +53,16 @@
                     <div class="pjchat-thread-meta">
                         {% if conv.item %}
                             <span class="pjchat-item-badge">
-                                {{ conv.item.name }}
+                                📦 {{ conv.item.name }}
                             </span>
+                        {% else %}
+                            <small class="pjchat-item-badge">
+                                Tidak ada barang terkait
+                            </small>
                         {% endif %}
 
                         <small class="pjchat-thread-preview">
-                            📦 {{ conv.last_preview }}
+                            {{ conv.last_preview }}
                         </small>
                     </div>
                 </div>

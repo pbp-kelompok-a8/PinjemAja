@@ -30,228 +30,232 @@
 </dialog>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const WILAYAH_BASE = 'https://www.emsifa.com/api-wilayah-indonesia/v2';
+    function initWilayah(){
+        const WILAYAH_BASE = 'https://www.emsifa.com/api-wilayah-indonesia/v2';
 
-    const provinceSelect = document.getElementById('province-select');
-    const citySelect = document.getElementById('city-select');
-    const districtSelect = document.getElementById('district-select');
-    const subdistrictSelect = document.getElementById('subdistrict-select');
+        const provinceSelect = document.getElementById('province-select');
+        const citySelect = document.getElementById('city-select');
+        const districtSelect = document.getElementById('district-select');
+        const subdistrictSelect = document.getElementById('subdistrict-select');
 
-    const provinceHidden = document.getElementById('province-hidden');
-    const cityHidden = document.getElementById('city-hidden');
-    const districtHidden = document.getElementById('district-hidden');
-    const subdistrictHidden = document.getElementById('subdistrict-hidden');
+        const provinceHidden = document.getElementById('province-hidden');
+        const cityHidden = document.getElementById('city-hidden');
+        const districtHidden = document.getElementById('district-hidden');
+        const subdistrictHidden = document.getElementById('subdistrict-hidden');
 
-    if (!provinceSelect || !citySelect || !districtSelect || !subdistrictSelect) {
-        return;
-    }
-
-    const current = {
-        province: provinceSelect.dataset.current || '',
-        city: citySelect.dataset.current || '',
-        district: districtSelect.dataset.current || '',
-        subdistrict: subdistrictSelect.dataset.current || ''
-    };
-
-    async function fetchRegions(endpoint) {
-        const response = await fetch(`${WILAYAH_BASE}/${endpoint}.json`);
-
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+        if (!provinceSelect || !citySelect || !districtSelect || !subdistrictSelect) {
+            return;
         }
 
-        const result = await response.json();
-        return result.data;
-    }
+        const current = {
+            province: provinceSelect.dataset.current || '',
+            city: citySelect.dataset.current || '',
+            district: districtSelect.dataset.current || '',
+            subdistrict: subdistrictSelect.dataset.current || ''
+        };
 
-    function resetSelect(select, placeholder) {
-        select.innerHTML = '';
+        async function fetchRegions(endpoint) {
+            const response = await fetch(`${WILAYAH_BASE}/${endpoint}.json`);
 
-        const option = document.createElement('option');
-        option.value = '';
-        option.textContent = placeholder;
-        select.appendChild(option);
-        select.value = '';
-        select.disabled = true;
-    }
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
 
-    function fillSelect(select, items, placeholder, selectedName = '') {
-        resetSelect(select, placeholder);
+            const result = await response.json();
+            return result.data;
+        }
 
-        items.forEach(item => {
+        function resetSelect(select, placeholder) {
+            select.innerHTML = '';
+
             const option = document.createElement('option');
-            option.value = item.id;
-            option.textContent = item.name;
+            option.value = '';
+            option.textContent = placeholder;
             select.appendChild(option);
+            select.value = '';
+            select.disabled = true;
+        }
+
+        function fillSelect(select, items, placeholder, selectedName = '') {
+            resetSelect(select, placeholder);
+
+            items.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.id;
+                option.textContent = item.name;
+                select.appendChild(option);
+            });
+
+            // Pilih wilayah berdasarkan NAMA yang tersimpan.
+            const matched = items.find(
+                item => item.name.toLowerCase() === selectedName.toLowerCase()
+            );
+
+            if (matched) {
+                select.value = matched.id;
+            }
+
+            select.disabled = false;
+        }
+
+        function syncHiddenFields() {
+            provinceHidden.value =
+                provinceSelect.selectedOptions[0]?.textContent || '';
+
+            cityHidden.value =
+                citySelect.selectedOptions[0]?.textContent || '';
+
+            districtHidden.value =
+                districtSelect.selectedOptions[0]?.textContent || '';
+
+            subdistrictHidden.value =
+                subdistrictSelect.selectedOptions[0]?.textContent || '';
+        }
+
+        async function loadProvinces() {
+            resetSelect(provinceSelect, 'Pilih Provinsi');
+            resetSelect(citySelect, 'Pilih Kota/Kabupaten');
+            resetSelect(districtSelect, 'Pilih Kecamatan');
+            resetSelect(subdistrictSelect, 'Pilih Kelurahan');
+
+            try {
+                const provinces = await fetchRegions('provinces');
+
+                fillSelect(
+                    provinceSelect,
+                    provinces,
+                    'Pilih Provinsi',
+                    current.province
+                );
+
+                if (provinceSelect.value) {
+                    await loadCities(current.city, true);
+                }
+
+                syncHiddenFields();
+            } catch (error) {
+                console.error('Gagal memuat provinsi:', error);
+            }
+        }
+
+        async function loadCities(selectedCity = '', initializing = false) {
+            resetSelect(citySelect, 'Pilih Kota/Kabupaten');
+            resetSelect(districtSelect, 'Pilih Kecamatan');
+            resetSelect(subdistrictSelect, 'Pilih Kelurahan');
+
+            if (!provinceSelect.value) {
+                syncHiddenFields();
+                return;
+            }
+
+            try {
+                const cities = await fetchRegions(
+                    `regencies/${provinceSelect.value}`
+                );
+
+                fillSelect(
+                    citySelect,
+                    cities,
+                    'Pilih Kota/Kabupaten',
+                    selectedCity
+                );
+
+                if (citySelect.value && initializing) {
+                    await loadDistricts(current.district, true);
+                }
+
+                syncHiddenFields();
+            } catch (error) {
+                console.error('Gagal memuat kota/kabupaten:', error);
+            }
+        }
+
+        async function loadDistricts(selectedDistrict = '', initializing = false) {
+            resetSelect(districtSelect, 'Pilih Kecamatan');
+            resetSelect(subdistrictSelect, 'Pilih Kelurahan');
+
+            if (!citySelect.value) {
+                syncHiddenFields();
+                return;
+            }
+
+            try {
+                const districts = await fetchRegions(
+                    `districts/${citySelect.value}`
+                );
+
+                fillSelect(
+                    districtSelect,
+                    districts,
+                    'Pilih Kecamatan',
+                    selectedDistrict
+                );
+
+                if (districtSelect.value && initializing) {
+                    await loadSubdistricts(current.subdistrict);
+                }
+
+                syncHiddenFields();
+            } catch (error) {
+                console.error('Gagal memuat kecamatan:', error);
+            }
+        }
+
+        async function loadSubdistricts(selectedSubdistrict = '') {
+            resetSelect(subdistrictSelect, 'Pilih Kelurahan');
+
+            if (!districtSelect.value) {
+                syncHiddenFields();
+                return;
+            }
+
+            try {
+                const subdistricts = await fetchRegions(
+                    `villages/${districtSelect.value}`
+                );
+
+                fillSelect(
+                    subdistrictSelect,
+                    subdistricts,
+                    'Pilih Kelurahan',
+                    selectedSubdistrict
+                );
+
+                syncHiddenFields();
+            } catch (error) {
+                console.error('Gagal memuat kelurahan:', error);
+            }
+        }
+
+        provinceSelect.addEventListener('change', async () => {
+            current.city = '';
+            current.district = '';
+            current.subdistrict = '';
+            await loadCities();
+            syncHiddenFields();
         });
 
-        // Pilih wilayah berdasarkan NAMA yang tersimpan.
-        const matched = items.find(
-            item => item.name.toLowerCase() === selectedName.toLowerCase()
-        );
+        citySelect.addEventListener('change', async () => {
+            current.district = '';
+            current.subdistrict = '';
+            await loadDistricts();
+            syncHiddenFields();
+        });
 
-        if (matched) {
-            select.value = matched.id;
-        }
+        districtSelect.addEventListener('change', async () => {
+            current.subdistrict = '';
+            await loadSubdistricts();
+            syncHiddenFields();
+        });
 
-        select.disabled = false;
+        subdistrictSelect.addEventListener('change', syncHiddenFields);
+
+        loadProvinces();
     }
 
-    function syncHiddenFields() {
-        provinceHidden.value =
-            provinceSelect.selectedOptions[0]?.textContent || '';
+    document.addEventListener('DOMContentLoaded', initWilayah);
+    document.body.addEventListener('htmx:afterSwap', initWilayah);
 
-        cityHidden.value =
-            citySelect.selectedOptions[0]?.textContent || '';
-
-        districtHidden.value =
-            districtSelect.selectedOptions[0]?.textContent || '';
-
-        subdistrictHidden.value =
-            subdistrictSelect.selectedOptions[0]?.textContent || '';
-    }
-
-    async function loadProvinces() {
-        resetSelect(provinceSelect, 'Pilih Provinsi');
-        resetSelect(citySelect, 'Pilih Kota/Kabupaten');
-        resetSelect(districtSelect, 'Pilih Kecamatan');
-        resetSelect(subdistrictSelect, 'Pilih Kelurahan');
-
-        try {
-            const provinces = await fetchRegions('provinces');
-
-            fillSelect(
-                provinceSelect,
-                provinces,
-                'Pilih Provinsi',
-                current.province
-            );
-
-            if (provinceSelect.value) {
-                await loadCities(current.city, true);
-            }
-
-            syncHiddenFields();
-        } catch (error) {
-            console.error('Gagal memuat provinsi:', error);
-        }
-    }
-
-    async function loadCities(selectedCity = '', initializing = false) {
-        resetSelect(citySelect, 'Pilih Kota/Kabupaten');
-        resetSelect(districtSelect, 'Pilih Kecamatan');
-        resetSelect(subdistrictSelect, 'Pilih Kelurahan');
-
-        if (!provinceSelect.value) {
-            syncHiddenFields();
-            return;
-        }
-
-        try {
-            const cities = await fetchRegions(
-                `regencies/${provinceSelect.value}`
-            );
-
-            fillSelect(
-                citySelect,
-                cities,
-                'Pilih Kota/Kabupaten',
-                selectedCity
-            );
-
-            if (citySelect.value && initializing) {
-                await loadDistricts(current.district, true);
-            }
-
-            syncHiddenFields();
-        } catch (error) {
-            console.error('Gagal memuat kota/kabupaten:', error);
-        }
-    }
-
-    async function loadDistricts(selectedDistrict = '', initializing = false) {
-        resetSelect(districtSelect, 'Pilih Kecamatan');
-        resetSelect(subdistrictSelect, 'Pilih Kelurahan');
-
-        if (!citySelect.value) {
-            syncHiddenFields();
-            return;
-        }
-
-        try {
-            const districts = await fetchRegions(
-                `districts/${citySelect.value}`
-            );
-
-            fillSelect(
-                districtSelect,
-                districts,
-                'Pilih Kecamatan',
-                selectedDistrict
-            );
-
-            if (districtSelect.value && initializing) {
-                await loadSubdistricts(current.subdistrict);
-            }
-
-            syncHiddenFields();
-        } catch (error) {
-            console.error('Gagal memuat kecamatan:', error);
-        }
-    }
-
-    async function loadSubdistricts(selectedSubdistrict = '') {
-        resetSelect(subdistrictSelect, 'Pilih Kelurahan');
-
-        if (!districtSelect.value) {
-            syncHiddenFields();
-            return;
-        }
-
-        try {
-            const subdistricts = await fetchRegions(
-                `villages/${districtSelect.value}`
-            );
-
-            fillSelect(
-                subdistrictSelect,
-                subdistricts,
-                'Pilih Kelurahan',
-                selectedSubdistrict
-            );
-
-            syncHiddenFields();
-        } catch (error) {
-            console.error('Gagal memuat kelurahan:', error);
-        }
-    }
-
-    provinceSelect.addEventListener('change', async () => {
-        current.city = '';
-        current.district = '';
-        current.subdistrict = '';
-        await loadCities();
-        syncHiddenFields();
-    });
-
-    citySelect.addEventListener('change', async () => {
-        current.district = '';
-        current.subdistrict = '';
-        await loadDistricts();
-        syncHiddenFields();
-    });
-
-    districtSelect.addEventListener('change', async () => {
-        current.subdistrict = '';
-        await loadSubdistricts();
-        syncHiddenFields();
-    });
-
-    subdistrictSelect.addEventListener('change', syncHiddenFields);
-
-    loadProvinces();
-});
 </script>
 <script>
 document.addEventListener('change', function (event) {

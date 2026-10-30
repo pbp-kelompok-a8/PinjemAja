@@ -35,7 +35,6 @@ class StartConversationTests(TestCase):
             owner=self.owner,
             price=10000,
             condition="baik",
-            location="Depok",
             status="tersedia"
         )
 
@@ -1404,4 +1403,83 @@ class ChatEditDeleteJsonTests(TestCase):
             self.message.hidden_for.filter(
                 pk=self.outsider.pk
             ).exists()
+        )
+
+
+class ChatItemBackLinkTests(TestCase):
+
+    def setUp(self):
+        self.owner = User.objects.create_user(
+            username="owner_back_link_test",
+            password="password123"
+        )
+
+        self.borrower = User.objects.create_user(
+            username="borrower_back_link_test",
+            password="password123"
+        )
+
+        self.item = Item.objects.create(
+            name="Kamera Canon Test",
+            description="Barang untuk pengujian navigasi chat",
+            category="fotografi",
+            owner=self.owner,
+            price=10000,
+            condition="baik",
+            status="tersedia"
+        )
+
+        self.client.force_login(self.borrower)
+
+    def test_back_to_item_link_exists(self):
+        conversation = Conversation.objects.create(
+            item=self.item,
+            participant_1=self.borrower,
+            participant_2=self.owner,
+        )
+
+        response = self.client.get(
+            reverse(
+                "chat:conversation_detail",
+                args=[conversation.pk]
+            )
+        )
+
+        expected_url = reverse(
+            "item:item_detail",
+            args=[self.item.pk]
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            f'href="{expected_url}"'
+        )
+        self.assertContains(
+            response,
+            "Kembali ke Detail Barang"
+        )
+
+    def test_back_to_item_link_hidden_without_item(self):
+        conversation = Conversation.objects.create(
+            item=None,
+            participant_1=self.borrower,
+            participant_2=self.owner,
+        )
+
+        response = self.client.get(
+            reverse(
+                "chat:conversation_detail",
+                args=[conversation.pk]
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "Tidak ada barang terkait"
+        )
+        self.assertNotContains(
+            response,
+            "Kembali ke Detail Barang"
         )

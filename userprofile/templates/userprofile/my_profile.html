@@ -9,6 +9,7 @@
         {% endif %}
     </div>
     <h5>@{{ request.user.username }}</h5>
+    <p class="profile-joined">Bergabung {{ request.user.date_joined|date:"M Y" }}</p>
     <a href="{% url 'userprofile:edit_profile' %}" class="btn btn-outline-warning mb-4">Edit Profile</a>
 </div>
 <div class="text-start">

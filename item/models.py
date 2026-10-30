@@ -61,6 +61,23 @@ class Item(models.Model):
         city = (profile.city if profile else '').strip()
         return city.title() if city else 'Lokasi belum diatur'
 
+    # Status transaksi yang mengunci barang: selama ada transaksi dengan status
+    # ini, barang tidak boleh diedit/dihapus pemiliknya.
+    LOCKING_TRANSAKSI_STATUS = [
+        'menunggu_pembayaran',
+        'menunggu_pengambilan',   # alur COD (setara menunggu pembayaran)
+        'menunggu_konfirmasi',
+        'disetujui',
+    ]
+
+    @property
+    def is_locked(self):
+        """True jika barang sedang dalam transaksi aktif sehingga tidak boleh diedit/dihapus."""
+        from transaction.models import Transaksi
+        return Transaksi.objects.filter(
+            barang=self, status__in=self.LOCKING_TRANSAKSI_STATUS
+        ).exists()
+
     @property
     def is_available(self):
         return self.status == 'tersedia'
