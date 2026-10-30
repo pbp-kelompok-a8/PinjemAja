@@ -25,8 +25,13 @@
 
     {% if show_actions %}
     <div class="catalog-actions">
+        {% if item.is_locked %}
+        <span class="btn-pa-outline is-disabled" title="Barang sedang dalam proses peminjaman">🔒 Edit</span>
+        <span class="btn-pa-danger is-disabled" title="Barang sedang dalam proses peminjaman">🔒 Hapus</span>
+        {% else %}
         <a href="{% url 'item:item_update' item.pk %}" class="btn-pa-outline">Edit</a>
         <a href="{% url 'item:item_delete' item.pk %}" class="btn-pa-danger">Hapus</a>
+        {% endif %}
     </div>
     {% endif %}
 </article>
