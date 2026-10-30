@@ -314,3 +314,15 @@ class ItemLockTest(TestCase):
         response = self.client.get(reverse('item:item_detail', args=[self.item.pk]))
         self.assertContains(
             response, reverse('userprofile:public_profile', args=[self.owner.id]))
+
+
+class ItemListPageTest(TestCase):
+    def test_ada_link_kembali_ke_beranda(self):
+        response = self.client.get(reverse('item:item_list'))
+        self.assertContains(response, 'Kembali ke beranda')
+        self.assertContains(response, f'href="{reverse("landing_page")}" class="pa-link pa-back"')
+
+    def test_pesan_kosong_di_kategori(self):
+        response = self.client.get(reverse('item:item_list') + '?category=buku')
+        self.assertContains(response, 'class="pa-empty"')
+        self.assertContains(response, 'Lihat semua barang')
